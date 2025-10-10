@@ -1,0 +1,13 @@
+{
+  "uuid": "man-search-provider@LumenGNU.github.com",
+  "name": "ManSearchProvider",
+  "description": "...",
+  "version": 1,
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48"
+  ],
+  "url": "https://github.com/LumenGNU/CommandGalette"
+}

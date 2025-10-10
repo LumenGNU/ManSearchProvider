@@ -1,0 +1,27 @@
+{
+  "name": "",
+  "version": "1.0.0",
+  "description": "...",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "clear-dist": "[ -e ./dist ] && rm -rf ./dist",
+    "clear-ext-dir": "[ -e ~/.local/share/gnome-shell/extensions/man-search-provider@LumenGNU.github.com ] && rm -rf ~/.local/share/gnome-shell/extensions/man-search-provider@LumenGNU.github.com",
+    "build-dist": "npm run clear-dist; echo 'Compile...'; tsc",
+    "mkdir-ext": "mkdir -p ~/.local/share/gnome-shell/extensions/man-search-provider@LumenGNU.github.com/",
+    "install-ext": "npm run clear-ext-dir; npm run mkdir-ext; echo 'Install...'; cp -r ./dist/* metadata.json ~/.local/share/gnome-shell/extensions/man-search-provider@LumenGNU.github.com/",
+    "watch": "tsc --watch",
+    "nested-shell::run": "systemd-run --unit=_nested_shell_for_debug --user env  GNOME_SHELL_SLOWDOWN_FACTOR=2 MUTTER_DEBUG_DUMMY_MODE_SPECS=1280x720 SHELL_DEBUG=all dbus-run-session -- gnome-shell --nested --wayland &>/dev/null",
+    "nested-shell::stop": "systemctl --user stop _nested_shell_for_debug || true",
+    "nested-shell::restart": "systemctl --user restart _nested_shell_for_debug || true"
+  },
+  "devDependencies": {
+    "eslint": "^9.37.0",
+    "eslint-plugin-jsdoc": "^61.1.0",
+    "typescript": "^5.9.3",
+    "@girs/gnome-shell": "^49.0.2",
+    "@girs/gjs": "^4.0.0-beta.38",
+    "@girs/gobject-2.0": "^2.86.0-4.0.0-beta.38",
+    "@girs/st-17": "^17.0.0-4.0.0-beta.38"
+  }
+}
