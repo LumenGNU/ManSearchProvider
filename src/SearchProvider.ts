@@ -63,7 +63,7 @@ export class SearchProvider implements AppSearchProvider {
     //  * Если true, Shell добавит кнопку "Показать все результаты"
     //  * */
     // get canLaunchSearch(): boolean {
-    //     return true; // Включаем кнопку "Показать все"
+    //     return false; // Включаем кнопку "Показать все"
     // }
 
     /** Уникальный идентификатор поставщика.
@@ -134,6 +134,7 @@ export class SearchProvider implements AppSearchProvider {
             // Можно использовать gnome-terminal или yelp
             // Вариант 1: Терминал
             GLib.spawn_command_line_async(`gnome-terminal -- man ${section} ${name}`);
+
 
             // Вариант 2: GUI просмотрщик (раскомментируйте если хотите)
             // GLib.spawn_command_line_async(`yelp man:${name}(${section})`);
