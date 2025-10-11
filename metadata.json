@@ -1,7 +1,7 @@
 {
   "uuid": "man-search-provider@LumenGNU.github.com",
-  "name": "ManSearchProvider",
-  "description": "...",
+  "name": "Man Search Provider",
+  "description": "Search man pages from GNOME Shell overview",
   "version": 1,
   "shell-version": [
     "45",

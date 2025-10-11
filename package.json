@@ -1,7 +1,7 @@
 {
-  "name": "",
+  "name": "man-search-provider",
   "version": "1.0.0",
-  "description": "...",
+  "description": "Search man pages from GNOME Shell",
   "type": "module",
   "private": true,
   "scripts": {

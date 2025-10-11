@@ -1,8 +1,11 @@
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { AppSearchProvider } from "resource:///org/gnome/shell/ui/appDisplay.js";
 
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
+import Shell from "gi://Shell";
 
 /**
  * Метаданные результата поиска.
@@ -28,7 +31,13 @@ export interface ResultMeta {
     createIcon: (size: number) => Clutter.Actor;
 }
 
-export class SearchProvider {
+interface ManPage {
+    name: string;
+    section: string;
+    description: string;
+}
+
+export class SearchProvider implements AppSearchProvider {
 
     private extension;
 
@@ -42,17 +51,20 @@ export class SearchProvider {
      * Расширения обычно возвращают `null`.
      * */
     get appInfo(): Gio.AppInfo | null {
-        return null;
+        // Можно вернуть фейковый AppInfo для кнопки "Показать все"
+        // return null;
+
+        const app = Shell.AppSystem.get_default().lookup_app("org.gnome.Terminal.desktop");
+        return app.appInfo;
     }
 
-    /** Предлагает ли провайдер подробные результаты.
-     * 
-     * Приложения возвращают значение `true`, если у них есть возможность отображать более
-     * подробные или полные результаты. Расширения обычно возвращают значение `false`.
-     * */
-    get canLaunchSearch(): boolean {
-        return false;
-    }
+    // /** Предлагает ли провайдер подробные результаты.
+    //  * 
+    //  * Если true, Shell добавит кнопку "Показать все результаты"
+    //  * */
+    // get canLaunchSearch(): boolean {
+    //     return true; // Включаем кнопку "Показать все"
+    // }
 
     /** Уникальный идентификатор поставщика.
      * 
@@ -63,6 +75,48 @@ export class SearchProvider {
         return this.extension.uuid;
     }
 
+    /**
+     * Поиск man-страниц по ключевому слову
+     */
+    private searchManPages(query: string): ManPage[] {
+        try {
+            // Используем man -k (apropos) для поиска
+            const [ok, stdout, stderr] = GLib.spawn_command_line_sync(`man -k ${GLib.shell_quote(query)}`);
+
+            if (!ok) {
+                console.error('Failed to execute man -k');
+                return [];
+            }
+
+            const decoder = new TextDecoder('utf-8');
+            const output = decoder.decode(stdout!);
+
+            if (!output || output.trim() === '') {
+                return [];
+            }
+
+            const results: ManPage[] = [];
+            const lines = output.split('\n').filter(line => line.trim() !== '');
+
+            for (const line of lines) {
+                // Формат: command (section) - description
+                const match = line.match(/^([^\s]+)\s*\(([^)]+)\)\s*-\s*(.+)$/);
+                if (match) {
+                    results.push({
+                        name: match[1],
+                        section: match[2],
+                        description: match[3].trim()
+                    });
+                }
+            }
+
+            return results.slice(0, 20); // Ограничиваем 20 результатами
+        } catch (e) {
+            console.error('Error searching man pages:', e);
+            return [];
+        }
+    }
+
     /** Запустить результат поиска.
      * Этот метод вызывается при активации результата поисковой системы.
      *
@@ -71,35 +125,93 @@ export class SearchProvider {
      */
     activateResult(result: string, terms: string[]) {
         console.debug(`activateResult(${result}, [${terms}])`);
+
+        // Открываем man-страницу в терминале
+        try {
+            // result имеет формат "name(section)"
+            const [name, section] = result.replace(')', '').split('(');
+
+            // Можно использовать gnome-terminal или yelp
+            // Вариант 1: Терминал
+            GLib.spawn_command_line_async(`gnome-terminal -- man ${section} ${name}`);
+
+            // Вариант 2: GUI просмотрщик (раскомментируйте если хотите)
+            // GLib.spawn_command_line_async(`yelp man:${name}(${section})`);
+        } catch (e) {
+            console.error('Error activating result:', e);
+        }
     }
 
-    /** Запуск поискового провайдера.
-     * 
-     * Этот метод вызывается при активации поискового провайдера. Провайдер может быть
-     * активирован только в том случае, если свойство `appInfo` содержит действительное значение `Gio.AppInfo`,
-     * а свойство `canLaunchSearch` имеет значение `true`.
-     * 
-     * Приложения обычно открывают окно для отображения более подробных или
-     * полных результатов.
-     *
-     * @param terms - поисковые термины */
-    launchSearch(terms: string[]) {
-        console.debug(`launchSearch([${terms}])`);
-    }
+    // /** Запуск поискового провайдера.
+    //  * 
+    //  * Показывает все найденные man-страницы в терминале
+    //  *
+    //  * @param terms - поисковые термины */
+    // launchSearch(terms: string[]) {
+    //     console.debug(`launchSearch([${terms}])`);
 
-    /** Создать объект результата.
-     * 
-     * Этот метод вызывается для создания актора, представляющего результат поиска.
-     * Реализации могут возвращать любой `Clutter.Actor`, который будет служить результатом отображения,
-     * или `null` для реализации по умолчанию.
-     *
-     * @param meta объект метаданных результата
-     * @returns Актер для результата */
-    createResultObject(meta: ResultMeta): Clutter.Actor | null {
-        console.debug(`createResultObject(${meta.id})`);
+    //     const query = terms.join(' ');
 
-        return null;
-    }
+    //     try {
+    //         // Открываем терминал с apropos (то же что man -k)
+    //         GLib.spawn_command_line_async(`gnome-terminal -- bash -c "apropos ${GLib.shell_quote(query)}; read -p 'Press Enter to close...'"`);
+    //     } catch (e) {
+    //         console.error('Error launching search:', e);
+    //     }
+    // }
+
+    // /** Создать объект результата.
+    //  * 
+    //  * Этот метод вызывается для создания актора, представляющего результат поиска.
+    //  * Возвращая custom actor, GNOME Shell будет отображать результаты списком!
+    //  *
+    //  * @param meta объект метаданных результата
+    //  * @returns Актер для результата */
+    // createResultObject(meta: ResultMeta): Clutter.Actor | null {
+    //     console.debug(`createResultObject(${meta.id})`);
+
+    //     // Создаем кастомный виджет для отображения в виде списка
+    //     const box = new St.BoxLayout({
+    //         style_class: 'list-search-result-content',
+    //         vertical: false,
+    //         x_expand: true,
+    //         y_expand: true
+    //     });
+
+    //     // Добавляем иконку
+    //     const icon = meta.createIcon(this.ICON_SIZE || 32);
+    //     box.add_child(icon);
+
+    //     // Создаем текстовый блок
+    //     const textBox = new St.BoxLayout({
+    //         style_class: 'list-search-result-text',
+    //         vertical: true,
+    //         x_expand: true,
+    //         y_align: Clutter.ActorAlign.CENTER
+    //     });
+
+    //     // Название
+    //     const name = new St.Label({
+    //         text: meta.name,
+    //         style_class: 'list-search-result-title'
+    //     });
+    //     textBox.add_child(name);
+
+    //     // Описание (если есть)
+    //     if (meta.description) {
+    //         const description = new St.Label({
+    //             text: meta.description,
+    //             style_class: 'list-search-result-description'
+    //         });
+    //         textBox.add_child(description);
+    //     }
+
+    //     box.add_child(textBox);
+
+    //     return box;
+    // }
+
+    private ICON_SIZE = 32;
 
     /** Получить метаданные результата.
      *
@@ -111,10 +223,11 @@ export class SearchProvider {
      * @param results идентификаторы результатов
      * @param cancellable отменяемое действие для операции
      * @returns массив объектов метаданных результата */
+    // @ts-ignore
     getResultMetas(results: string[], cancellable: Gio.Cancellable): Promise<ResultMeta[]> {
         console.debug(`getResultMetas([${results}])`);
 
-        const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
+        // const { scaleFactor } = St.ThemeContext.get_for_stage(global.stage);
 
         return new Promise((resolve, reject) => {
             const cancelledId = cancellable.connect(
@@ -123,18 +236,15 @@ export class SearchProvider {
             const resultMetas = [] as ResultMeta[];
 
             for (const identifier of results) {
+                // identifier имеет формат "name(section)"
+                const [fullName, desc] = identifier.split('|');
+                const [name, section] = fullName.replace(')', '').split('(');
+
                 const meta: ResultMeta = {
                     id: identifier,
-                    name: 'Result Name',
-                    description: 'The result description',
-                    clipboardText: 'Content for the clipboard',
-                    createIcon: size => {
-                        return new St.Icon({
-                            icon_name: 'dialog-information',
-                            width: size * scaleFactor,
-                            height: size * scaleFactor,
-                        });
-                    },
+                    name: `${name} (${section})`,
+                    description: desc || 'Man page',
+                    createIcon: (size: number) => Shell.AppSystem.get_default().lookup_app('org.gnome.Terminal.desktop').create_icon_texture(size),
                 };
 
                 resultMetas.push(meta);
@@ -164,11 +274,22 @@ export class SearchProvider {
             const cancelledId = cancellable.connect(
                 () => reject(Error('Search Cancelled')));
 
-            const identifiers = [
-                'result-01',
-                'result-02',
-                'result-03',
-            ];
+            // Объединяем поисковые термины в один запрос
+            const query = terms.join(' ');
+
+            // Минимум 2 символа для поиска
+            if (query.length < 2) {
+                cancellable.disconnect(cancelledId);
+                resolve([]);
+                return;
+            }
+
+            const manPages = this.searchManPages(query);
+
+            // Формируем идентификаторы: "name(section)|description"
+            const identifiers = manPages.map(page =>
+                `${page.name}(${page.section})|${page.description}`
+            );
 
             cancellable.disconnect(cancelledId);
             if (!cancellable.is_cancelled())
@@ -192,12 +313,14 @@ export class SearchProvider {
      * @param terms поисковые термины
      * @param cancellable — отменяемое действие для операции
      * @returns подмножество исходного набора результатов */
+    // @ts-ignore
     getSubsearchResultSet(results: string[], terms: string[], cancellable: Gio.Cancellable): Promise<string[]> {
         console.debug(`getSubsearchResultSet([${results}], [${terms}])`);
 
         if (cancellable.is_cancelled())
             throw Error('Search Cancelled');
 
+        // Просто запускаем новый поиск с обновленными терминами
         return this.getInitialResultSet(terms, cancellable);
     }
 
@@ -214,9 +337,13 @@ export class SearchProvider {
     filterResults(results: string[], maxResults: number): string[] {
         console.debug(`filterResults([${results}], ${maxResults})`);
 
-        if (results.length <= maxResults)
+        // Игнорируем ограничение Shell и показываем больше результатов
+        // Shell может показать до ~15 результатов в списке
+        const ourMax = 15;
+
+        if (results.length <= ourMax)
             return results;
 
-        return results.slice(0, maxResults);
+        return results.slice(0, ourMax);
     }
 }
