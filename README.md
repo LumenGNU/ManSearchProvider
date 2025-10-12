@@ -34,7 +34,7 @@ Simply start typing in the overview. The provider activates automatically for an
 
 This code is designed as an example implementation of a search provider through a GNOME Shell extension and is not intended for end-user consumption.
 
-This project is written in **TypeScript** and should only be used as an example or "template" for implementing your own search provider.
+This project is written in **TypeScript** and should only be used as an example or "template" for implementing your own **search provider**.
 
 See the information below for how to install and start development.
 
@@ -43,6 +43,7 @@ See [SearchProvider_Example.md](SearchProvider_Example.md) for code description 
 
 # Development
 
+**Note**: This guide covers basic development workflow only. It does not include complete instructions for packaging and publishing your extension. For comprehensive documentation on these topics, refer to the relevant sections at https://gjs.guide/extensions/
 
 ## Requirements
 
