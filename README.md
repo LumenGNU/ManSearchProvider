@@ -17,7 +17,7 @@ A search provider for quick access to man pages directly from the GNOME Shell ov
 
 Simply start typing in the overview. The provider activates automatically for any query of 2 or more characters.
 
-![Screenshot](screenshot.png)
+![Screenshot](screenshot1.png)
 
 
 ## Implementation Features
@@ -157,6 +157,8 @@ When using separate commands, it's easy to:
 
 
 ## Nested Shell
+
+![Screenshot](screenshot2.png)
 
 - Opens nested shell in a separate window
 - Opens terminal window with log and debug output
