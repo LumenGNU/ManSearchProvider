@@ -12,7 +12,7 @@ import Shell from "gi://Shell";
  * 
  * Используется GNOME Shell для отображения результатов поиска.
  * 
- * @see https://gjs.guide/extensions/topics/search-provider.html
+ * 
  */
 export interface ResultMetaInterface {
     /** Уникальный идентификатор результата */

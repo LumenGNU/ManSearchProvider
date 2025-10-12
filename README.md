@@ -38,6 +38,23 @@ npm run install-ext
 - Минимальная длина запроса: 2 символа
 - Максимум 20 результатов
 
+## Development Documentation
+
+See:
+- [Search Provider implementation as a GNOME Shell extension](https://gjs.guide/extensions/topics/search-provider.html)
+- [GJS TypeScript type definitions for GNOME Shell Extensions ](https://github.com/gjsify/gnome-shell)
+
+
+## Target GNOME Shell Versions
+This is an example extension for **GNOME Shell 45-48**.
+
+**Note for GNOME Shell 49+:**  
+The extension itself may work in GNOME Shell 49+, but the development workflow described below won't work because X11 is disabled by default. [To debug extensions in GNOME 49+, use the development kit](https://gjs.guide/extensions/upgrading/gnome-shell-49.html#debugging):
+
+~~~sh
+dbus-run-session -- gnome-shell --devkit
+~~~
+
 
 ## Development Workflow
 
@@ -91,6 +108,8 @@ When using separate commands, it's easy to:
 - Run: `npm run nested-shell:start`
 - Stop and run (restart): `npm run nested-shell:restart`
 - Stop: `npm run nested-shell:stop` or close the terminal window
+
+⚠️ **This is designed for GNOME Shell 45-48 and won't work in GNOME Shell 49+ due to disabled X11.**
 
 
 ## Build and Debug Configuration
