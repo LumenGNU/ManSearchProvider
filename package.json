@@ -13,10 +13,10 @@
   },
   "scripts": {
     "build": "npm run project:build-dist",
-    "install": "npm run project:install-extension",
+    "setup": "npm run project:install-extension",
     "clear": "npm run project:clear-dist; npm run project:clear-extension",
     "debug": "npm run nested-shell:restart",
-    "dev": "npm run build && npm run install && npm run debug",
+    "dev": "npm run build && npm run setup && npm run debug",
 
     "project:clear-dist": "[ -e $npm_package_config_DIST_DIR ] && rm -rf $npm_package_config_DIST_DIR",
     "project:clear-extension": "[ -e `eval echo \"$npm_package_config_EXTENSION_DIR/$npm_package_config_ID\"` ] && rm -rf `eval echo \"$npm_package_config_EXTENSION_DIR/$npm_package_config_ID\"`",

@@ -81,7 +81,7 @@ npm install
 
 ~~~sh
 npm run build    # TypeScript → JavaScript в dist/
-npm run install  # Копирует в ~/.local/share/gnome-shell/extensions/
+npm run setup  # Копирует в ~/.local/share/gnome-shell/extensions/
 ~~~
 
 3. Запусти вложенный GNOME Shell для тестирования:
@@ -111,7 +111,7 @@ npm run debug  # Откроет терминал с отладочным выв�
 
 ~~~sh
 npm run build   # Compile TypeScript to dist/
-npm run install # Install extension to system
+npm run setup   # Install extension to system
 npm run debug   # Start nested GNOME Shell (opens terminal with debug output)
 npm run dev     # Alias for `npm run build && npm run install && npm run debug`
 npm run clear   # Clear dist/ and remove installed extension
@@ -123,13 +123,13 @@ npm run clear   # Clear dist/ and remove installed extension
 ~~~sh
 # 1. Changed code
 # 2. Build, install and run in nested shell:
-npm run build && npm run install && npm run debug
+npm run build && npm run setup && npm run debug
 
 # 3. Shell crashed or closed the window? Restart:
 npm run debug
 
 # 4. Rebuild and reinstall:
-npm run build && npm run install
+npm run build && npm run setup
 
 # 5. Restart nested shell:
 npm run debug
