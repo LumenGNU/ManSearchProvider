@@ -1,30 +1,18 @@
 # Man Search Provider для GNOME Shell
 
+
 **THIS IS EXAMPLE ONLY**
 
 Поисковый провайдер для быстрого доступа к man-страницам прямо из GNOME Shell overview.
 
+
 ## Как это работает
 
 1. Открываешь overview (Super/Windows клавиша)
-2. Начинаешь печатать команду, например `grep`, `bash`, `ls`
+2. Начинаешь печатать команду, например `grep`, `git`, `vim`
 3. Видишь результаты из man-страниц
 4. Кликаешь на результат → открывается man-страница в терминале
 
-## Установка
-
-```bash
-npm install
-npm run build-dist
-npm run install-ext
-```
-
-Затем перезапусти GNOME Shell:
-- На Wayland: выйди и войди заново
-- На X11: `Alt+F2` → `r` → Enter
-(Клод, блядь! Мы не в XIX веке!!!! Сам выйди и зайди заново!)
-
-Включи расширение в Extensions приложении.
 
 ## Использование
 
@@ -37,16 +25,31 @@ npm run install-ext
 - Показывает название команды, секцию и описание
 - Открывает man-страницу в gnome-terminal при клике
 - Минимальная длина запроса: 2 символа
-- Максимум 20 результатов
 
-## Development Documentation
 
-See:
-- [Search Provider implementation as a GNOME Shell extension](https://gjs.guide/extensions/topics/search-provider.html)
-- [GJS TypeScript type definitions for GNOME Shell Extensions ](https://github.com/gjsify/gnome-shell)
+## Установка
+
+Это код задуман как пример реализации поискового провайдера через расширение для GNOME Shell, и не предназначено для использования конечным потребителем.
+
+Этот проект должен быть использован только как пример или "заготовка" для реализации своего поискового провайдера.
+
+Смотри информацию ниже для как установить и начать разработку
+
+Смотри [SearchProvider.md](SearchProvider.md) - для описания и объяснения кода и структуры расширения.
+
+
+# Development
+
+
+## Требования
+
+- GNOME Shell версии 45-48 (для версии 49+ см. примечание ниже)
+- Node.js 18+ и npm
+- `man` в системе (обязателен только для этого примера)
 
 
 ## Target GNOME Shell Versions
+
 This is an example extension for **GNOME Shell 45-48**.
 
 **Note for GNOME Shell 49+:**  
@@ -55,6 +58,50 @@ The extension itself may work in GNOME Shell 49+, but the development workflow d
 ~~~sh
 dbus-run-session -- gnome-shell --devkit
 ~~~
+
+
+## Development Documentation
+
+See:
+- [Search Provider implementation as a GNOME Shell extension](https://gjs.guide/extensions/topics/search-provider.html)
+- [GJS TypeScript type definitions for GNOME Shell Extensions ](https://github.com/gjsify/gnome-shell)
+
+
+## Установка для разработки
+
+1. Клонируй и установи зависимости: 
+
+~~~sh
+git clone https://github.com/LumenGNU/ManSearchProvider.git
+cd ManSearchProvider
+npm install
+~~~
+
+2. Собери и установи расширение:
+
+~~~sh
+npm run build    # TypeScript → JavaScript в dist/
+npm run install  # Копирует в ~/.local/share/gnome-shell/extensions/
+~~~
+
+3. Запусти вложенный GNOME Shell для тестирования:
+
+~~~sh
+npm run debug  # Откроет терминал с отладочным выводом и вложенную оболочку
+~~~
+
+4. Активируй расширение (ВАЖНО):
+
+- **Внутри запущенной вложенной оболочке** открой приложение Extensions
+- Включи "Man Search Provider"
+
+или
+
+- **Внутри запущенной вложенной оболочке** открой терминал
+- Выполни
+  ~~~sh
+  gnome-extensions enable "man-search-provider@example.github.com"
+  ~~~
 
 
 ## Development Workflow
@@ -98,6 +145,7 @@ When using separate commands, it's easy to:
 - Forget to recompile after code changes
 - Forget to reinstall after build
 - Forget to restart shell after installation
+- Забыть активировать расширение после запуска Nested Shell
 
 **Solution:** Use `npm run dev` for typical development cycle — it runs all three steps in correct order.
 
