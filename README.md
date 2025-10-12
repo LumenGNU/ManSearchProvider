@@ -1,5 +1,8 @@
 # Man Search Provider for GNOME Shell
 
+![GNOME Shell](https://img.shields.io/badge/GNOME%20Shell-45--48-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue)
+
 **THIS IS AN EXAMPLE ONLY**
 
 **Tech Stack:** TypeScript, GNOME Shell Extensions API
