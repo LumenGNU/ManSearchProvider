@@ -97,7 +97,7 @@ When using separate commands, it's easy to:
 
 Settings in `package.json` section `config`:
 
-~~~json
+~~~jsonc
 "config": {
   "ID": "man-search-provider@example.github.com",            // Extension UUID
   "DIST_DIR": "./dist",                                      // Build directory
