@@ -2,6 +2,7 @@
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Extension } from "resource:///org/gnome/shell/extensions/extension.js";
 
+
 import { SearchProvider } from './SearchProvider.js';
 
 export default class ExampleExtension extends Extension {
@@ -14,7 +15,9 @@ export default class ExampleExtension extends Extension {
   }
 
   disable() {
+
     Main.overview.searchController.removeProvider(this.search_provider);
+
     this.search_provider = null as never;
   }
 
