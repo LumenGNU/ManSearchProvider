@@ -161,7 +161,7 @@ When using separate commands, it's easy to:
 - Forget to recompile after code changes
 - Forget to reinstall after build
 - Forget to restart shell after installation
-- Forget to enable the extension after starting Nested Shell (**each time**)
+- Forget to enable the extension after starting nested shell (**each time**)
 - Forget to clear the system after debugging unstable code, risking it running on your main desktop after logout/login and potentially breaking your system
 
 **Solution:** Use `npm run dev` for typical development cycle — it runs all three steps in the correct order. Remember that you still need to manually enable the extension inside the nested shell.
@@ -177,7 +177,7 @@ When using separate commands, it's easy to:
 - Run: `npm run nested-shell:start`
 - Stop and run (restart): `npm run nested-shell:restart`
 - Stop: `npm run nested-shell:stop` or close the terminal window
-- Interaction with Nested Shell may be significantly slower
+- Interaction with nested shell may be significantly slower
 
 ⚠️ [**This is designed for GNOME Shell 45-48 and won't work in GNOME Shell 49+.**](https://gjs.guide/extensions/upgrading/gnome-shell-49.html#debugging)
 
