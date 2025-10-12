@@ -2,6 +2,8 @@
 
 **THIS IS AN EXAMPLE ONLY**
 
+**Tech Stack:** TypeScript, GNOME Shell Extensions API
+
 A search provider for quick access to man pages directly from the GNOME Shell overview.
 
 
@@ -24,7 +26,7 @@ Simply start typing in the overview. The provider activates automatically for an
 
 - Uses `man -k` (apropos) for searching
 - Displays command name, section, and description
-- Opens man page in gnome-terminal on click
+- Opens man page in terminal on click
 - Minimum query length: 2 characters
 
 
@@ -32,7 +34,7 @@ Simply start typing in the overview. The provider activates automatically for an
 
 This code is designed as an example implementation of a search provider through a GNOME Shell extension and is not intended for end-user consumption.
 
-This project should only be used as an example or "template" for implementing your own search provider.
+This project is written in **TypeScript** and should only be used as an example or "template" for implementing your own search provider.
 
 See the information below for how to install and start development.
 
@@ -46,6 +48,7 @@ See [SearchProvider_Example.md](SearchProvider_Example.md) for code description 
 
 - GNOME Shell version 45-48 (for version 49+ see note below)
 - Node.js 18+ and npm
+- TypeScript 5+ (but installed automatically via npm)
 - `man` in the system (required only for this example)
 
 
@@ -64,7 +67,8 @@ dbus-run-session -- gnome-shell --devkit
 ## Development Documentation
 
 See:
-- [Search Provider implementation as a GNOME Shell extension](https://gjs.guide/extensions/topics/search-provider.html)
+- [Search Provider implementation as a GNOME Shell extension (JavaScript)](https://gjs.guide/extensions/topics/search-provider.html)
+- [GNOME Shell Extensions (JavaScript)](https://gjs.guide/extensions/)
 - [GJS TypeScript type definitions for GNOME Shell Extensions](https://github.com/gjsify/gnome-shell/tree/main/packages/gnome-shell)
 
 
@@ -91,18 +95,18 @@ npm run setup    # Copies to ~/.local/share/gnome-shell/extensions/
 npm run debug  # Opens terminal with debug output and nested shell
 ```
 
-4. Enable the extension (**IMPORTANT**):
+4. Enable the extension inside nested shell (**IMPORTANT**):
 
-- **Inside the running nested shell**, open the "Extensions" application
-- Enable "Man Search Provider"
+   Each time you start nested shell with `npm run debug`, you need to enable the extension inside it (**each time**):
 
-or
+   - **Inside the running nested shell**, open the Extensions application and enable "Man Search Provider"
 
-- **Inside the running nested shell**, open terminal
-- Execute:
-  ```sh
-  gnome-extensions enable "man-search-provider@example.github.com"
-  ```
+   or
+
+   - **Inside the running nested shell**, open terminal and execute:
+     ```sh
+     gnome-extensions enable "man-search-provider@example.github.com"
+     ```
 
 5. Debugging
 
@@ -122,6 +126,8 @@ npm run debug   # Start nested GNOME Shell (opens terminal with debug output)
 npm run dev     # Alias for `npm run build && npm run setup && npm run debug`
 npm run clear   # Clear dist/ and remove installed extension
 ```
+
+**Note:** `npm run debug` is an alias for `npm run nested-shell:restart`. See `package.json` for a complete list of commands.
 
 
 ### Typical Workflow
@@ -151,7 +157,8 @@ When using separate commands, it's easy to:
 - Forget to recompile after code changes
 - Forget to reinstall after build
 - Forget to restart shell after installation
-- Forget to enable the extension after starting Nested Shell
+- Forget to enable the extension after starting Nested Shell (**each time**)
+- Forget to clear the system after debugging unstable code, risking it running on your main desktop after logout/login and potentially breaking your system
 
 **Solution:** Use `npm run dev` for typical development cycle — it runs all three steps in the correct order. Remember that you still need to manually enable the extension inside the nested shell.
 
@@ -170,7 +177,7 @@ When using separate commands, it's easy to:
 
 ⚠️ [**This is designed for GNOME Shell 45-48 and won't work in GNOME Shell 49+.**](https://gjs.guide/extensions/upgrading/gnome-shell-49.html#debugging)
 
-**Alternative**: Instead of using nested shell, you can log out and log back in to test the extension in your actual GNOME session. This is more stable but less convenient for rapid development.
+**Alternative**: Instead of using nested shell, you can log out and log back in to test the extension in your actual GNOME session. This is more stable but less convenient for rapid development and doesn't provide real-time debug output.
 
 
 ## Build and Debug Configuration
