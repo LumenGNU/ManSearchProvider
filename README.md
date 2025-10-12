@@ -179,7 +179,7 @@ Settings in `package.json` section `config`:
   "DIST_DIR": "./dist",                                      // Build directory
   "EXTENSION_DIR": "~/.local/share/gnome-shell/extensions",  // Installation path
   "TERMINAL": "gnome-terminal",                              // Terminal for debug logs
-  "TERMINAL_PARAM": "--"                                     // Terminal parameter for running commands
+  "TERMINAL_PARAM": "--",                                    // Terminal parameter for running commands
   "LANG": "C"                                                // Полезно для проверки переводов. Например de_DE.UTF-8, fr_FR.UTF-8
 }
 ~~~
