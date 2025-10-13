@@ -54,6 +54,7 @@ See [SearchProvider_Example.md](SearchProvider_Example.md) for code description 
 - Node.js 18+ and npm
 - TypeScript 5+ (but installed automatically via npm)
 - `man` in the system (required only for this example)
+- `org.gnome.Terminal` aka `gnome-terminal` (required only for this example)
 
 
 ## Target GNOME Shell Versions
