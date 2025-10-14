@@ -1,11 +1,14 @@
 import type Gio from 'gi://Gio';
 import type Clutter from 'gi://Clutter';
 
-// @fixme Это контракт
-/** `SearchProviderInterface` — an interface implementing a search provider for 
- * GNOME Shell extensions.
+/**  Contract interface between GNOME Shell and Shell extensions that implement
+ * a search provider.
  * 
- * [See search provider implementation example for more information](https://github.com/LumenGNU/ManSearchProvider) */
+ * This interface defines the required methods and properties that must be 
+ * implemented by any Shell extension to provide custom search functionality
+ * integrated with GNOME Shell's search system.
+ * 
+ * [See Search Provider Implementation Example for more information](https://github.com/LumenGNU/ManSearchProvider) */
 export interface SearchProviderInterface {
 
 
