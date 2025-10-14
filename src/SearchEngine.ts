@@ -138,7 +138,7 @@ export class SearchEngine {
      * 
      * Возвращает строку - описание или null
      */
-    protected async getDescription(identifier: string, cancellable: Gio.Cancellable): Promise<[name: string, description: string] | null> {
+    protected async getPageInfo(identifier: string, cancellable: Gio.Cancellable): Promise<[title: string, description: string] | null> {
 
         // console.debug('\n' +
         //     `SearchEngine: getDescription(terms: ${identifier}, ` +

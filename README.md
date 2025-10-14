@@ -41,7 +41,7 @@ This project is written in **TypeScript** and should only be used as an example 
 
 See the information below for how to install and start development.
 
-See [SearchProvider_Example.md](SearchProvider_Example.md) for code description and explanation of the extension structure.
+See [Search Provider Implementation](SearchProviderImplementation.md) for code description and explanation of the extension structure.
 
 
 # Development

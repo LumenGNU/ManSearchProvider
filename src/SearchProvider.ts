@@ -36,12 +36,6 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
         return this.extensionId;
     }
 
-    /** Управляет видимостью подписи "Показать больше результатов". */
-    get canLaunchSearch(): boolean {
-        // Будет отображаться всегда если `filterResults`
-        // отбросил часть результатов
-        return false;
-    }
 
     /** AppInfo поставщика */
     get appInfo(): Gio.AppInfo | null {
@@ -58,6 +52,14 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
         // и заголовком "Terminal" (с учетом локали)
         const app = Shell.AppSystem.get_default().lookup_app("org.gnome.Terminal.desktop");
         return app.appInfo;
+    }
+
+
+    /** Управляет видимостью подписи "Показать больше результатов". */
+    get canLaunchSearch(): boolean {
+        // Будет отображаться всегда если `filterResults`
+        // отбросил часть результатов
+        return false;
     }
 
 
@@ -100,16 +102,57 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
 
     }
 
-    /** Создать объект результата.
+
+    /** Уточнить текущий поиск.
      * 
-     * Этот метод вызывается для создания актора, представляющего результат поиска.
+     * Этот метод вызывается для уточнения текущих результатов поиска с помощью
+     * расширенных терминов и должен возвращать подмножество исходного набора результатов.
+     * 
+     * Реализации могут использовать этот метод для более эффективного уточнения результатов поиска,
+     * чем запуск нового поиска, или просто передавать термины в
+     * реализацию `getInitialResultSet()`.
+     * 
+     * Если срабатывает cancellable, этот метод должен вызывать ошибку.
+     * 
+     * @async
+     * @param results исходный набор результатов
+     * @param terms поисковые термины
+     * @param cancellable — отменяемое действие для операции
+     * @returns подмножество исходного набора результатов */
+    async getSubsearchResultSet(_previousResults: string[], terms: string[], cancellable: Gio.Cancellable): Promise<string[]> {
+
+        // console.debug(`\nSearchProvider: getSubsearchResultSet(results: ${JSON.stringify(_previousResults, null, 2)}, ${JSON.stringify(terms, null, 2)}), cancellable: ${cancellable.constructor.name}`);
+
+        if (cancellable.is_cancelled()) return [];
+
+        // Просто запускаем новый поиск с обновленными терминами
+        return this.getInitialResultSet(terms, cancellable);
+    }
+
+
+    /** Фильтрация текущего поиска.
      *
-     * @param resultMeta объект метаданных результата
-     * @returns Актер для результата, или null -  */
-    createResultObject(_resultMeta: ResultMetaInterface): Clutter.Actor | null {
-        // console.debug(`SearchProvider: createResultObject(meta: ${JSON.stringify(resultMeta, null, 2)})`);
-        // return new St.Icon({ icon_name: 'dialog-information-symbolic' });
-        return null;
+     * Этот метод вызывается для сокращения количества результатов поиска.
+     * 
+     * *NOTE* Результатом должно быть подмножество `identifiers`. Добавление новых
+     *        результатов не допустимо
+     *
+     * Реализации могут использовать свои собственные критерии для отбрасывания результатов или
+     * просто возвращать первые n элементов.
+     *
+     * @param identifiers исходный набор результатов
+     * @param _maxResults желаемое максимальное количество результатов
+     * @returns отфильтрованные результаты */
+    filterResults(identifiers: string[], _maxResults: number): string[] {
+
+        // console.debug(`\nSearchProvider: filterResults(results: ${results.length}, maxResults: ${_maxResults})`);
+
+        // Игнорируем ограничение Shell и показываем больше результатов
+        const ourMax = 7;
+
+        if (identifiers.length <= ourMax) return identifiers;
+
+        return identifiers.slice(0, ourMax);
     }
 
 
@@ -141,8 +184,8 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
 
             if (cancellable.is_cancelled()) return [];
 
-            /** {@link getDescription} */
-            const result = await this.getDescription(identifier, cancellable);
+            /** {@link getPageInfo} */
+            const result = await this.getPageInfo(identifier, cancellable);
 
             // если результат null - или процесс прерван или
             // случилась ошибка - в любои случае нет смысла продолжать
@@ -181,57 +224,16 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
     }
 
 
-
-
-    /** Уточнить текущий поиск.
+    /** Создать объект результата.
      * 
-     * Этот метод вызывается для уточнения текущих результатов поиска с помощью
-     * расширенных терминов и должен возвращать подмножество исходного набора результатов.
-     * 
-     * Реализации могут использовать этот метод для более эффективного уточнения результатов поиска,
-     * чем запуск нового поиска, или просто передавать термины в
-     * реализацию `getInitialResultSet()`.
-     * 
-     * Если срабатывает cancellable, этот метод должен вызывать ошибку.
-     * 
-     * @async
-     * @param results исходный набор результатов
-     * @param terms поисковые термины
-     * @param cancellable — отменяемое действие для операции
-     * @returns подмножество исходного набора результатов */
-    async getSubsearchResultSet(_previousResults: string[], terms: string[], cancellable: Gio.Cancellable): Promise<string[]> {
-
-        // console.debug(`\nSearchProvider: getSubsearchResultSet(results: ${JSON.stringify(_previousResults, null, 2)}, ${JSON.stringify(terms, null, 2)}), cancellable: ${cancellable.constructor.name}`);
-
-        if (cancellable.is_cancelled()) return [];
-
-        // Просто запускаем новый поиск с обновленными терминами
-        return this.getInitialResultSet(terms, cancellable);
-    }
-
-    /** Фильтрация текущего поиска.
+     * Этот метод вызывается для создания актора, представляющего результат поиска.
      *
-     * Этот метод вызывается для сокращения количества результатов поиска.
-     * 
-     * *NOTE* Результатом должно быть подмножество `identifiers`. Добавление новых
-     *        результатов не допустимо
-     *
-     * Реализации могут использовать свои собственные критерии для отбрасывания результатов или
-     * просто возвращать первые n элементов.
-     *
-     * @param identifiers исходный набор результатов
-     * @param _maxResults желаемое максимальное количество результатов
-     * @returns отфильтрованные результаты */
-    filterResults(identifiers: string[], _maxResults: number): string[] {
-
-        // console.debug(`\nSearchProvider: filterResults(results: ${results.length}, maxResults: ${_maxResults})`);
-
-        // Игнорируем ограничение Shell и показываем больше результатов
-        const ourMax = 7; // 12
-
-        if (identifiers.length <= ourMax) return identifiers;
-
-        return identifiers.slice(0, ourMax);
+     * @param resultMeta объект метаданных результата
+     * @returns Актер для результата, или null -  */
+    createResultObject(_resultMeta: ResultMetaInterface): Clutter.Actor | null {
+        // console.debug(`SearchProvider: createResultObject(meta: ${JSON.stringify(resultMeta, null, 2)})`);
+        // return new St.Icon({ icon_name: 'dialog-information-symbolic' });
+        return null;
     }
 
 
@@ -245,7 +247,7 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
      *
      * @param  result идентификатор результата. (то, что отображается как активированная строка-результат)
      * @param  terms поисковые термины. (то, что сейчас в строке поиска) */
-    activateResult(result: string, _terms: string[]) {
+    activateResult(result: string, _terms: string[]): void {
 
         // console.debug(`\nSearchProvider: activateResult(result: ${result}, terms: ${JSON.stringify(terms, null, 2)})`);
 

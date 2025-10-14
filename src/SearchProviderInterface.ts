@@ -1,116 +1,119 @@
 import type Gio from 'gi://Gio';
 import type Clutter from 'gi://Clutter';
 
-/** `SearchProviderInterface` — интерфейс, реализующий поставщика поиска для 
- * расширения GNOME Shell 
+// @fixme Это контракт
+/** `SearchProviderInterface` — an interface implementing a search provider for 
+ * GNOME Shell extensions.
  * 
- * [Смотри пример реализации поставщика поиска для дополнительной информации]( // @fixme ) */
+ * [See search provider implementation example for more information](https://github.com/LumenGNU/ManSearchProvider) */
 export interface SearchProviderInterface {
 
 
-    /** Уникальный строковый идентификатор поставщика поиска в системе. */
+    /** Unique string identifier of the search provider in the system. */
     readonly id: string;
 
 
-    /** `AppInfo` поставщика поиска. */
+    /** The search provider's `GAppInfo`. */
     readonly appInfo: Gio.AppInfo | null;
 
 
-    /** Управляет видимостью действия "Показать больше результатов". */
+    /** Controls the visibility of the "Show more results" action. */
     readonly canLaunchSearch: boolean;
 
 
-    /** Обрабатывает запрос Shell на первоначальный поиск и возвращает 
-     * строковые идентификаторы найденных результатов.
+    /** Handles Shell's request for an initial search and returns 
+     * string identifiers of the found results.
      * 
-     * **NOTE**: Реализация **должна** прерывать поиск по сигналу объекта 
-     * `cancellable`.
+     * **NOTE**: The implementation **must** abort the search upon signal from the 
+     * `cancellable` object.
      * 
-     * @param terms Массив поисковых терминов
-     * @param cancellable Объект для отмены операции
-     * @returns Promise, который разрешается в массив идентификаторов результатов */
+     * @param terms Array of search terms
+     * @param cancellable Object for cancelling the operation
+     * @returns Promise that resolves to an array of result identifiers */
     getInitialResultSet(terms: string[], cancellable: Gio.Cancellable): Promise<string[]>;
 
 
-    /** Обрабатывает запрос Shell на уточнение результатов поиска при добавлении 
-     * новых поисковых терминов.
+    /** Handles Shell's request to refine search results when new 
+     * search terms are added.
      * 
-     * Возвращает подмножество исходного набора результатов или результат нового 
-     * поиска.
+     * Returns a subset of the original result set or the result of a new 
+     * search.
      * 
-     * **NOTE**: Реализация **должна** прерывать поиск по сигналу объекта 
-     * `cancellable`.
+     * **NOTE**: The implementation **must** abort the search upon signal from the 
+     * `cancellable` object.
      * 
-     * @param previousIdentifiers Идентификаторы результатов из предыдущего поиска
-     * @param terms Массив поисковых терминов
-     * @param cancellable Объект для отмены операции
-     * @returns Promise, который разрешается в массив идентификаторов результатов */
+     * @param previousIdentifiers Result identifiers from the previous search
+     * @param terms Array of new search terms
+     * @param cancellable Object for cancelling the operation
+     * @returns Promise that resolves to an array of result identifiers */
     getSubsearchResultSet(previousIdentifiers: string[], terms: string[], cancellable: Gio.Cancellable): Promise<string[]>;
 
 
-    /** Обрабатывает запрос Shell на уменьшения количества отображаемых результатов
-     * текущего поиска. 
+    /** Handles Shell's request to reduce the number of displayed results
+     * for the current search.
      * 
-     * @param identifiers Полный список идентификаторов текущих результатов
-     * @param maxResults Желаемое максимальное количество результатов для отображения
-     * @returns Усеченный массив идентификаторов результатов */
+     * @param identifiers Complete list of current result identifiers
+     * @param maxResults Desired maximum number of results to display
+     * @returns Truncated array of result identifiers */
     filterResults(identifiers: string[], maxResults: number): string[];
 
 
-    /** Обрабатывает запрос Shell на получение метаданных результатов для отображения 
-     * в UI.
+    /** Handles Shell's request to retrieve result metadata for display 
+     * in the UI.
      * 
-     * **NOTE**: Реализация **должна** прерывать обработку по сигналу объекта 
-     * `cancellable`.
+     * **NOTE**: The implementation **must** abort processing upon signal from the 
+     * `cancellable` object.
      * 
-     * @param identifiers Список идентификаторов
-     * @param cancellable Объект для отмены операции
-     * @returns Promise, который разрешается в массив метаданных для каждого 
-     *   результата из `identifiers` */
+     * @param identifiers List of identifiers
+     * @param cancellable Object for cancelling the operation
+     * @returns Promise that resolves to an array of metadata for each 
+     *   result from `identifiers` */
     getResultMetas(identifiers: string[], cancellable: Gio.Cancellable): Promise<ResultMetaInterface[]>;
 
 
-    /** Обрабатывает запрос Shell на получение пользовательского виджет для 
-     * отображения результата.
+    /** Handles Shell's request to retrieve a custom widget for 
+     * displaying the result.
      * 
-     * @param meta Метаданные результата
-     * @returns Пользовательский виджет или `null` - для стандартного отображения */
+     * @param meta Result metadata
+     * @returns Custom widget or `null` for default rendering */
     createResultObject(meta: ResultMetaInterface): Clutter.Actor | null;
 
 
-    /** Обрабатывает запрос Shell на активацию результата поиска.
+    /** Handles Shell's request to activate a search result.
      *
-     * @param identifier Идентификатор активированного результата
-     * @param terms Поисковые термины, которые привели к этому результату */
+     * @param identifier Identifier of the activated result
+     * @param terms Search terms that led to this result */
     activateResult(identifier: string, terms: string[]): void;
 
 
-    /** Обрабатывает запрос Shell на активацию действия "Показать больше результатов".
+    /** Handles Shell's request to activate the "Show more results" action for 
+     * current search terms.
      * 
-     * @param terms Текущие поисковые термины */
+     * @param terms Current search terms */
     launchSearch(terms: string[]): void;
 };
 
 
-/**
- * Метаданные результата поиска.
+/** Search result metadata.
  * 
- * Используются Shell для отображения результатов поиска.
+ * Used by Shell to display search results.
  * 
- * [Смотри пример реализации поставщика поиска для дополнительной информации]( // @fixme ) */
+ * [See search provider implementation example for more information](https://github.com/LumenGNU/ManSearchProvider) */
 export interface ResultMetaInterface {
-    /** Уникальный идентификатор результата */
+
+    /** Unique identifier of the result */
     id: string;
 
-    /** Название для результата */
+    /** Name for the result (title) */
     name: string;
 
-    /** Описание результата (необязательно). */
+    /** Description of the result (optional). */
     description?: string;
 
-    /** Текст для помещения в буфер обмена (необязательно). */
+    /** Text to place in the clipboard when the result is activated (optional). */
     clipboardText?: string;
 
-    /** Функция (CallBack), возвращающая значок для результата указанного размера. */
+    /** Callback function that returns an icon for the result at the specified size. */
     createIcon: (size: number) => Clutter.Actor;
+
 }
