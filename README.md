@@ -72,8 +72,9 @@ dbus-run-session -- gnome-shell --devkit
 ## Development Documentation
 
 See:
-- [Search Provider implementation as a GNOME Shell extension (JavaScript)](https://gjs.guide/extensions/topics/search-provider.html)
 - [GNOME Shell Extensions (JavaScript)](https://gjs.guide/extensions/)
+- [Search Provider implementation as a GNOME Shell extension (JavaScript)](https://gjs.guide/extensions/topics/search-provider.html)
+- [Subprocesses in GJS (JavaScript)](https://gjs.guide/guides/gio/subprocesses.html)
 - [GJS TypeScript type definitions for GNOME Shell Extensions](https://github.com/gjsify/gnome-shell/tree/main/packages/gnome-shell)
 
 

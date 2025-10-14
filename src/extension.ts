@@ -10,7 +10,7 @@ export default class ExampleExtension extends Extension {
   private declare search_provider: SearchProvider;
 
   enable() {
-    this.search_provider = new SearchProvider(this);
+    this.search_provider = new SearchProvider(this.uuid);
     Main.overview.searchController.addProvider(this.search_provider);
   }
 
