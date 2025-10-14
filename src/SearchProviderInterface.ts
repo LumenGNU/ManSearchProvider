@@ -17,8 +17,6 @@ export interface SearchProviderInterface {
 
 
     /** Управляет видимостью действия "Показать больше результатов". */
-    // @fixme или
-    /** Определяет доступность действия "Показать больше результатов". */
     readonly canLaunchSearch: boolean;
 
 

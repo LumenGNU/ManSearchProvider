@@ -40,13 +40,14 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
     get canLaunchSearch(): boolean {
         // Будет отображаться всегда если `filterResults`
         // отбросил часть результатов
-        return true;
+        return false;
     }
 
     /** AppInfo поставщика */
     get appInfo(): Gio.AppInfo | null {
 
-        // Можно вернуть фейковый AppInfo для кнопки "Показать больше результатов"
+        // Можно вернуть фейковый AppInfo для 
+        // return Gio.AppInfo.get_default_for_type('x-scheme-handler/help', false);
 
         // Если вернуть null поставщиком будет GNOME Shell, а результаты будут
         // отображены как значки (не список) вне какой либо группы
@@ -98,10 +99,6 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
         return (resultIdentifiers);
 
     }
-
-    // -----
-
-
 
     /** Создать объект результата.
      * 
@@ -215,6 +212,9 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
     /** Фильтрация текущего поиска.
      *
      * Этот метод вызывается для сокращения количества результатов поиска.
+     * 
+     * *NOTE* Результатом должно быть подмножество `identifiers`. Добавление новых
+     *        результатов не допустимо
      *
      * Реализации могут использовать свои собственные критерии для отбрасывания результатов или
      * просто возвращать первые n элементов.
@@ -237,7 +237,8 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
 
     /** Этот метод вызывается при активации результата поиска.
      * 
-     * Если `ResultMeta` результата предоставляет `clipboardText` соответствующий текст будет помещен
+     * Если `ResultMeta` результата предоставляет `clipboardText` - то, паралельно
+     * соответствующий текст будет помещен
      * в буфер обмена.
      * 
      * https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/search.js?ref_type=heads#L61
@@ -248,6 +249,8 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
 
         // console.debug(`\nSearchProvider: activateResult(result: ${result}, terms: ${JSON.stringify(terms, null, 2)})`);
 
+        // этот метод не обязан что либо делать
+
         const [name, section, _description] = result.split('|');
 
         // Открываем man-страницу в терминале
@@ -256,7 +259,10 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
         try {
             console.debug(`SearchProvider: activateResult> spawn gnome-terminal for 'man ${section} ${name}' ...`);
 
-            const [success, argv] = GLib.shell_parse_argv(`gnome-terminal -- man ${section} ${name}`);
+            const [success, argv] = GLib.shell_parse_argv(
+                `gnome-terminal -- man ${section} ${name}`
+            );
+
             if (success && argv) {
                 Gio.Subprocess.new(argv, Gio.SubprocessFlags.NONE);
             }
@@ -285,7 +291,11 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
             console.debug('SearchProvider: launchSearch> spawn gnome-terminal for show more results for terms ...');
 
             // Открываем терминал с apropos (то же что man -k)
-            const [success, argv] = GLib.shell_parse_argv(`gnome-terminal -- bash -c "apropos ${terms.join(' ')}; read -p '\n\nPress Enter to close...'"`);
+            // **gnome-terminal не сможет стартовать внутри nested shell**
+            const [success, argv] = GLib.shell_parse_argv(
+                `gnome-terminal -- bash -c "apropos ${terms.join(' ')}; read -p '\n\nPress Enter to close...'"`
+            );
+
             if (success && argv) {
                 Gio.Subprocess.new(argv, Gio.SubprocessFlags.NONE);
             }

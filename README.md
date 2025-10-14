@@ -13,7 +13,7 @@ A search provider for quick access to man pages directly from the GNOME Shell ov
 ## How It Works
 
 1. Open the overview (Super/Windows key)
-2. Start typing a command, e.g., `grep`, `git`, `vim`
+2. Start typing a command, e.g., `grep`, `vim`, `git`, `git clone` etc.
 3. See results from man pages
 4. Click on a result → opens the man page in terminal
 
@@ -22,7 +22,7 @@ A search provider for quick access to man pages directly from the GNOME Shell ov
 
 Simply start typing in the overview. The provider activates automatically for any query of 2 or more characters.
 
-![Screenshot](screenshot1.png)
+![Screenshot](pics/search_provider.png)
 
 
 ## Implementation Features
@@ -53,8 +53,11 @@ See [SearchProvider_Example.md](SearchProvider_Example.md) for code description 
 - GNOME Shell version 45-48 (for version 49+ see note below)
 - Node.js 18+ and npm
 - TypeScript 5+ (but installed automatically via npm)
-- `man` in the system (required only for this example)
-- `org.gnome.Terminal` aka `gnome-terminal` (required only for this example)
+
+required only for this example:
+
+- `man` in the system
+- `org.gnome.Terminal` aka `gnome-terminal`
 
 
 ## Target GNOME Shell Versions
