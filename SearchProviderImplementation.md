@@ -1,7 +1,7 @@
 # Руководство по реализации Search Provider для GNOME Shell на TypeScript
 
 
-## Введение
+# Введение
 
 Поставщики поиска позволяют интегрировать собственные источники данных в общесистемный поиск GNOME, давая пользователям возможность находить нужную информацию, не покидая поисковый интерфейс Shell.
 
@@ -10,7 +10,7 @@
 Документ объясняет, как реализовать интерфейсы `SearchProviderInterface` и `ResultMetaInterface` на примере расширения предоставляющего поиска по документам `man` доступных в системе.
 
 
-## Целевая аудитория
+# Целевая аудитория
 
 Документ предназначен для разработчиков расширений GNOME Shell, уже имеющих опыт работы с:
 
@@ -20,7 +20,7 @@
 
 Документ фокусируется на специфике реализации Search Provider и не рассматривает общие вопросы разработки на TypeScript и GJS для GNOME Shell. Некоторую информацию по этим темам можно найти в разделе [Development в README.md](README.md).
 
-## Дополнительные ресурсы
+# Дополнительные ресурсы
 
 Для изучения API и базовых концепций рекомендуется ознакомиться с:
 
@@ -28,7 +28,7 @@
 - [Gio - 2.0 (C API)](https://docs.gtk.org/gio/index.html) — документация API GIO
 - [hello-world](https://github.com/gjsify/gnome-shell/tree/main/examples/hello-world) — базовый пример реализации расширения GNOME Shell на TypeScript.
 
-## Предварительные требования
+# Предварительные требования
 
 Для работы с примером необходимо:
 
@@ -37,14 +37,14 @@
 - Базовое знакомство с библиотекой GIO
 
 
-## Структура документа
+# Структура документа
 
 1. **Основные концепции** — введение в концепцию поставщиков поиска
 2. **SearchProviderInterface** — детальное описание основного интерфейса
 3. **ResultMetaInterface** — описание интерфейса метаданных результатов
 
 
-## Основные концепции
+# Основные концепции
 
 Поставщик поиска — это компонент, который:
 
@@ -65,10 +65,10 @@
 Далее рассмотрим интерфейс `SearchProviderInterface`, определяющий контракт между Shell и расширением.
 
 
-## Интерфейс SearchProviderInterface
+# Интерфейс SearchProviderInterface
 
 
-### Обзор
+## Обзор
 
 `SearchProviderInterface` — интерфейс для реализации поставщика поиска в расширении GNOME Shell.
 
@@ -77,15 +77,15 @@
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts)
 
 
-### Импорт
+## Импорт
 
 Импорт не требуется — доступен глобально.
 
 
-### Свойства
+## Свойства
 
 
-#### `id`
+### `id`
 
 ~~~typescript
 readonly id: string;
@@ -93,12 +93,12 @@ readonly id: string;
 
 **Описание**: Уникальный строковый идентификатор поставщика поиска в системе.
 
-Должен быть уникальным среди всех поставщиков, не только среди расширений. Расширения обычно используют свой `UUID` качестве `id`.
+Должен быть уникальным среди всех поставщиков, не только среди расширений. Расширения обычно используют свой `UUID` в качестве `id`.
 
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L35)
 
 
-#### `appInfo`
+### `appInfo`
 
 ~~~typescript
 readonly appInfo: Gio.AppInfo | null
@@ -121,7 +121,7 @@ readonly appInfo: Gio.AppInfo | null
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L47)
 
 
-#### `canLaunchSearch`
+### `canLaunchSearch`
 
 ~~~typescript
 readonly canLaunchSearch: boolean
@@ -144,10 +144,10 @@ readonly canLaunchSearch: boolean
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L40)
 
 
-### Методы
+## Методы
 
 
-#### `getInitialResultSet()`
+### `getInitialResultSet()`
 
 ~~~typescript
 getInitialResultSet(
@@ -186,7 +186,7 @@ https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/search.js?ref_type=
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L74)
 
 
-#### `getSubsearchResultSet()`
+### `getSubsearchResultSet()`
 
 ~~~typescript
 getSubsearchResultSet(
@@ -215,7 +215,7 @@ getSubsearchResultSet(
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L202)
 
 
-#### `filterResults()`
+### `filterResults()`
 
 ~~~typescript
 filterResults(identifiers: string[], maxResults: number): string[]
@@ -241,7 +241,7 @@ filterResults(identifiers: string[], maxResults: number): string[]
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L225)
 
 
-#### `getResultMetas()`
+### `getResultMetas()`
 
 ~~~typescript
 getResultMetas(
@@ -272,7 +272,7 @@ https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/search.js?ref_type=
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L127)
 
 
-#### `createResultObject()`
+### `createResultObject()`
 
 ~~~typescript
 createResultObject(meta: ResultMetaInterface): Clutter.Actor | null
@@ -295,7 +295,7 @@ createResultObject(meta: ResultMetaInterface): Clutter.Actor | null
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L109)
 
 
-#### `activateResult()`
+### `activateResult()`
 
 ~~~typescript
 activateResult(identifier: string, terms: string[]): void
@@ -315,7 +315,7 @@ activateResult(identifier: string, terms: string[]): void
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L248)
 
 
-#### `launchSearch()`
+### `launchSearch()`
 
 ~~~typescript
 launchSearch(terms: string[]): void
@@ -332,20 +332,20 @@ launchSearch(terms: string[]): void
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L281)
 
 
-## Интерфейс ResultMetaInterface
+# Интерфейс ResultMetaInterface
 
 
-### Обзор
+## Обзор
 
 Интерфейс, определяющий метаданные результата поиска, которые GNOME Shell использует для отображения результата пользователю.
 
 **Использование в примере**: [SearchProvider.ts](src/SearchProvider.ts#L154)
 
 
-### Свойства
+## Свойства
 
 
-#### `id`
+### `id`
 
 ~~~typescript
 id: string
@@ -354,7 +354,7 @@ id: string
 Уникальный идентификатор результата.
 
 
-#### `name`
+### `name`
 
 ~~~typescript
 name: string
@@ -363,7 +363,7 @@ name: string
 Название результата.
 
 
-#### `description`
+### `description`
 
 ~~~typescript
 description?: string
@@ -372,7 +372,7 @@ description?: string
 Описание результата. Необязательное поле.
 
 
-#### `clipboardText`
+### `clipboardText`
 
 ~~~typescript
 clipboardText?: string
@@ -391,7 +391,7 @@ clipboardText?: string
 и т.п.
 
 
-#### `createIcon`
+### `createIcon`
 
 ~~~typescript
 createIcon: (size: number) => Clutter.Actor
@@ -410,9 +410,9 @@ createIcon: (size: number) => Clutter.Actor
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L159)
 
 
-## Архитектура примера расширения
+# Архитектура примера расширения
 
-### Обзор
+## Обзор
 
 Пример расширения реализован через три основных класса:
 
@@ -437,7 +437,7 @@ ExampleExtension
 - `SearchProvider` легко адаптировать для работы с другим поисковым движком
 
 
-### Класс `SearchEngine`
+## Класс `SearchEngine`
 
 [Файл: SearchEngine.ts](src/SearchEngine.ts)
 
@@ -482,7 +482,7 @@ man-страницу и её раздел.
 **Замечание**: Класс не зависит от GNOME Shell API и работает напрямую с системой.
 
 
-### Класс SearchProvider
+## Класс SearchProvider
 
 [Файл: SearchProvider.ts](src/SearchProvider.ts)
 
@@ -543,7 +543,7 @@ class SearchProvider extends SearchEngine implements SearchProviderInterface {
 **Примечание**: Наследование от `SearchEngine` позволяет напрямую вызывать методы поиска без дополнительной обёртки.
 
 
-### Класс `ExampleExtension`
+## Класс `ExampleExtension`
 
 [Файл: extension.ts](src/extension.ts)
 
@@ -576,7 +576,7 @@ export default class ExampleExtension extends Extension {
 ~~~
 
 
-### Поток данных
+## Поток данных
 
 ~~~
 Пользователь вводит запрос
@@ -598,7 +598,7 @@ GNOME Shell → SearchProvider.getInitialResultSet(terms)
 ~~~
 
 
-### О такой архитектуре
+## О такой архитектуре
 
 Разделение ответственности:
 

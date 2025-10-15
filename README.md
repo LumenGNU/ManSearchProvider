@@ -71,7 +71,6 @@ The extension itself may work in GNOME Shell 49+, but the development workflow d
 dbus-run-session -- gnome-shell --devkit
 ```
 
-
 ## Development Documentation
 
 See:

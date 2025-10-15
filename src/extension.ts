@@ -16,6 +16,8 @@ export default class ExampleExtension extends Extension {
 
     disable() {
 
+        Extension
+
         Main.overview.searchController.removeProvider(this.search_provider);
 
         this.search_provider = null as never;
