@@ -421,11 +421,12 @@ ExampleExtension
        :
        : управляет
        :
- SearchProvider -- реализует --> SearchProviderInterface
+       v                                <interface>
+ SearchProvider ┈┈ реализует ┈┈▷  SearchProviderInterface
        |
        | расширяет
        |
-       v
+       ▽
   SearchEngine (бизнес-логика поиска)
 ~~~
 
@@ -466,7 +467,7 @@ class SearchEngine {
     // Возвращает кортеж [title, description] для указанного идентификатора, или
     // `null` при отмене или ошибке.
     // Поддерживает отмену процесса.
-    protected async getPageInfo(identifier: string): Promise<[title: string, description: string] | null>
+    protected async getPageInfo(identifier: string, cancellable: Gio.Cancellable): Promise<[title: string, description: string] | null>
     
     // Парсинг вывода apropos.
     // Используется в `searchManPages` для формирования массива идентификаторов
@@ -475,7 +476,7 @@ class SearchEngine {
 }
 ~~~
 
-**Формат идентификаторов**: В данном примере используется формат `command|section` 
+> **Формат идентификаторов**: В данном примере используется формат `command|section` 
 (например, `printf|1`, `printf|3`), позволяющий однозначно идентифицировать 
 man-страницу и её раздел.
 
