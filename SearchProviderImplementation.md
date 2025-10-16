@@ -438,10 +438,10 @@ ExampleExtension
 - Поисковый движок можно использовать вне контекста Search Provider
 - `SearchProvider` легко адаптировать для работы с другим поисковым движком
 
-> **NOTE** Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Например, в простых случаях, сам класс расширения может реализовать интерфейс `SearchProvider2`:
+> **NOTE**: Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Например, в простых случаях, сам класс расширения может реализовать интерфейс `SearchProvider2`:
 >
 > ~~~typescript
-> export default class ExampleExtension extends Extension implements SearchProvider2 {
+> export default class SearchProviderExtension extends Extension implements SearchProvider2 {
 > 
 >     private declare searchProvider: SearchProvider;
 > 
@@ -455,7 +455,8 @@ ExampleExtension
 >         Main.overview.searchController.removeProvider(this);
 >     }
 > 
->     // Реализует интерфейс SearchProvider2
+>     // Добавляем еще одну ответственность:
+>     // реализуем интерфейс SearchProvider2
 >     id: string = this.uuid;
 >     appInfo: Gio.AppInfo = ...;
 >     //...
