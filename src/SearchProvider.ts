@@ -7,9 +7,9 @@ import Shell from "gi://Shell";
 
 // @todo
 import {
-    ResultMetaInterface,
-    SearchProviderInterface
-} from './SearchProviderInterface.js';
+    ResultMeta,
+    SearchProvider2
+} from './SearchProvider2.js';
 
 import {
     SearchEngine
@@ -17,7 +17,7 @@ import {
 
 
 
-export class SearchProvider extends SearchEngine implements SearchProviderInterface {
+export class SearchProvider extends SearchEngine implements SearchProvider2 {
 
     private extensionId;
 
@@ -163,7 +163,7 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
      * @param results идентификаторы результатов
      * @param cancellable отменяемое действие для операции
      * @returns массив объектов метаданных результата */
-    async getResultMetas(identifiers: any[], cancellable: Gio.Cancellable): Promise<ResultMetaInterface[]> {
+    async getResultMetas(identifiers: any[], cancellable: Gio.Cancellable): Promise<ResultMeta[]> {
 
         // console.debug(`\nSearchProvider: getResultMetas(results: ${JSON.stringify(results, null, 2)}, cancellable: ${cancellable.constructor.name})`);
 
@@ -174,7 +174,7 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
             return [];
         }
 
-        const resultMetas = [] as ResultMetaInterface[];
+        const resultMetas = [] as ResultMeta[];
 
         for (const identifier of identifiers) {
 
@@ -190,7 +190,7 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
             const [name, description] = result;
 
             // Создаем и заполняем объект `ResultMeta` для каждого результата
-            const meta: ResultMetaInterface = {
+            const meta: ResultMeta = {
                 id: identifier,
                 name: name,
                 description: description,
@@ -226,7 +226,7 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
      *
      * @param resultMeta объект метаданных результата
      * @returns Актер для результата, или null -  */
-    createResultObject(_resultMeta: ResultMetaInterface): Clutter.Actor | null {
+    createResultObject(_resultMeta: ResultMeta): Clutter.Actor | null {
         // console.debug(`SearchProvider: createResultObject(meta: ${JSON.stringify(resultMeta, null, 2)})`);
         // return new St.Icon({ icon_name: 'dialog-information-symbolic' });
         return null;

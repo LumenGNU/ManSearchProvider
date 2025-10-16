@@ -26,7 +26,7 @@ import type Clutter from 'gi://Clutter';
  * integrated with GNOME Shell's search system.
  * 
  * [See Search Provider Implementation Example for more information](https://github.com/LumenGNU/ManSearchProvider) */
-export interface SearchProviderInterface {
+export interface SearchProvider2 {
 
 
     /** Unique string identifier of the search provider in the system. */
@@ -88,7 +88,7 @@ export interface SearchProviderInterface {
      * @param cancellable Object for cancelling the operation
      * @returns Promise that resolves to an array of metadata for each 
      *   result from `identifiers` */
-    getResultMetas(identifiers: string[], cancellable: Gio.Cancellable): Promise<ResultMetaInterface[]>;
+    getResultMetas(identifiers: string[], cancellable: Gio.Cancellable): Promise<ResultMeta[]>;
 
 
     /** Handles Shell's request to retrieve a custom widget for 
@@ -96,7 +96,7 @@ export interface SearchProviderInterface {
      * 
      * @param meta Result metadata
      * @returns Custom widget or `null` for default rendering */
-    createResultObject(meta: ResultMetaInterface): Clutter.Actor | null;
+    createResultObject(meta: ResultMeta): Clutter.Actor | null;
 
 
     /** Handles Shell's request to activate a search result.
@@ -119,7 +119,7 @@ export interface SearchProviderInterface {
  * Used by Shell to display search results.
  * 
  * [See Search Provider Implementation Example for more information](https://github.com/LumenGNU/ManSearchProvider) */
-export interface ResultMetaInterface {
+export interface ResultMeta {
 
     /** Unique identifier of the result */
     id: string;

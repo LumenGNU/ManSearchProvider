@@ -7,7 +7,7 @@
 
 Этот документ описывает реализацию поставщика поиска (Search Provider) для GNOME Shell на **примере** расширения, написанного на TypeScript.
 
-Документ объясняет, как реализовать интерфейсы `SearchProviderInterface` и `ResultMetaInterface` на примере расширения предоставляющего поиска по документам `man` доступных в системе.
+Документ объясняет, как реализовать интерфейсы `SearchProvider2` и `ResultMeta` на примере расширения предоставляющего поиска по документам `man` доступных в системе.
 
 
 # Целевая аудитория
@@ -18,7 +18,8 @@
 - GJS (GNOME JavaScript bindings)
 - Основами разработки расширений GNOME Shell
 
-Документ фокусируется на специфике реализации Search Provider и не рассматривает общие вопросы разработки на TypeScript и GJS для GNOME Shell. Некоторую информацию по этим темам можно найти в разделе [Development в README.md](README.md).
+Документ фокусируется на специфике реализации Search Provider и не рассматривает общие вопросы разработки на TypeScript и GJS для GNOME Shell. Некоторую информацию по этим темам можно найти в разделе [Development в README.md](README.md). Также ознакомьтесь с дополнительными ресурсами.
+
 
 # Дополнительные ресурсы
 
@@ -27,6 +28,7 @@
 - [A Guide to JavaScript for GNOME](https://gjs.guide/) — комплексное руководство по GJS
 - [Gio - 2.0 (C API)](https://docs.gtk.org/gio/index.html) — документация API GIO
 - [hello-world](https://github.com/gjsify/gnome-shell/tree/main/examples/hello-world) — базовый пример реализации расширения GNOME Shell на TypeScript.
+
 
 # Предварительные требования
 
@@ -39,9 +41,7 @@
 
 # Структура документа
 
-1. **Основные концепции** — введение в концепцию поставщиков поиска
-2. **SearchProviderInterface** — детальное описание основного интерфейса
-3. **ResultMetaInterface** — описание интерфейса метаданных результатов
+
 
 
 # Основные концепции
@@ -55,22 +55,22 @@
 
 ![gnome_quick_searches](gnome_quick_searches.png)
 
-В рамках расширения GNOME Shell поставщик поиска реализуется как отдельный класс, реализующий `SearchProviderInterface`.
+В рамках расширения GNOME Shell поставщик поиска реализуется как отдельный класс, реализующий интерфейс `SearchProvider2`.
 
 Для успешной реализации поставщика поиска необходимо, прежде всего, понять назначение двух ключевых интерфейсов:
 
-- [`SearchProviderInterface`](#SearchProviderInterface) - интерфейс поставщика поиска
-- [`ResultMetaInterface`](#ResultMetaInterface) - интерфейс объект метаданных результата
+- [`SearchProvider2`](#SearchProvider2) - интерфейс поставщика поиска
+- [`ResultMeta`](#ResultMeta) - интерфейс объект метаданных результата
 
-Далее рассмотрим интерфейс `SearchProviderInterface`, определяющий контракт между Shell и расширением.
+Далее рассмотрим интерфейс `SearchProvider2`, определяющий контракт между Shell и расширением.
 
 
-# Интерфейс SearchProviderInterface
+# Интерфейс SearchProvider2
 
 
 ## Обзор
 
-`SearchProviderInterface` — интерфейс для реализации поставщика поиска в расширении GNOME Shell.
+`SearchProvider2` — интерфейс для реализации поставщика поиска в расширении GNOME Shell.
 
 Ваш класс должен реализовать этот интерфейс, чтобы Shell мог зарегистрировать и использовать его как поставщика поиска. Он определяет набор свойств и методов, необходимых для корректного взаимодействия с GNOME Shell при обработке поисковых запросов.
 
@@ -93,7 +93,7 @@ readonly id: string;
 
 **Описание**: Уникальный строковый идентификатор поставщика поиска в системе.
 
-Должен быть уникальным среди всех поставщиков, не только среди расширений. Расширения обычно используют свой `UUID` в качестве `id`.
+Должен быть уникальным среди всех поставщиков, не только среди расширений. Расширения обычно используют свой `UUID` в качестве этого идентификатора.
 
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L35)
 
@@ -132,14 +132,16 @@ readonly canLaunchSearch: boolean
 ![canLaunchSearch_true.png](pics/canLaunchSearch_true.png)
 
 Если свойство возвращает `true`, GNOME Shell отображает действие "Показать больше результатов", когда:
-- результатов больше, чем можно отобразить одновременно
+- результатов больше, чем можно отобразить одновременно, или
 - метод `filterResults` отфильтровал часть результатов
 
-При этом класс должен предоставить метод `launchSearch`, который будет вызван при активации действия "Показать больше результатов".
+При этом класс должен предоставить метод `launchSearch`, который будет вызван при активации этого действия.
 
 ![canLaunchSearch_false.png](pics/canLaunchSearch_false.png)
 
-Если свойство возвращает `false`, Shell не отображает это действие.
+Если свойство возвращает `false`, Shell не будет отображать это действие.
+
+Это свойство не влияет на **доступность** действия, а только на его визуальное отображение. Фактическая доступность действия, и то как оно активируется, может зависеть от установленных расширений, темы, и т.п.
 
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L40)
 
@@ -173,7 +175,7 @@ getInitialResultSet(
 
 Порядок идентификаторов определяет порядок отображения результатов.
 
-Shell передаёт эти идентификаторы в другие методы поставщика, когда необходимо обратиться к конкретному результату поиска.
+Shell будет передавать эти идентификаторы в другие методы поставщика, когда необходимо обратиться к конкретному результату поиска для его отображения или активации.
 
 **Важно**: Метод **должен** прервать поиск по сигналу от объекта [`cancellable`][GCancellable].
 
@@ -247,7 +249,7 @@ filterResults(identifiers: string[], maxResults: number): string[]
 getResultMetas(
     identifiers: string[], 
     cancellable: Gio.Cancellable
-): Promise<ResultMetaInterface[]>
+): Promise<ResultMeta[]>
 ~~~
 
 **Описание**: Возвращает метаданные результатов для отображения в интерфейсе.
@@ -259,9 +261,9 @@ getResultMetas(
 
 **Возвращает**: Promise с массивом метаданных для каждого результата из `identifiers`.
 
-Метод должен сопоставить каждому результату, перечисленному в массиве `identifiers`, соответствующий мета-объект, включающий как минимум поля `id`, `name` и `createIcon`.
+Метод должен сопоставить каждому результату, перечисленному в массиве `identifiers`, соответствующий ResultMeta объект, включающий как минимум поля `id`, `name` и `createIcon`.
 
-См. [Интерфейс ResultMetaInterface](#ResultMetaInterface)
+См. [Интерфейс ResultMeta](#ResultMeta)
 
 **Замечание**: Shell не устанавливает жёсткий таймаут, но ожидает, что метод остановит обработку, освободит связанные ресурсы и вернёт *пустой* массив при получении сигнала отмены от объекта `cancellable`.
 
@@ -275,7 +277,7 @@ https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/search.js?ref_type=
 ### `createResultObject()`
 
 ~~~typescript
-createResultObject(meta: ResultMetaInterface): Clutter.Actor | null
+createResultObject(meta: ResultMeta): Clutter.Actor | null
 ~~~
 
 **Описание**: Создаёт пользовательский виджет для отображения результата.
@@ -308,9 +310,9 @@ activateResult(identifier: string, terms: string[]): void
 - `identifier` — идентификатор активированного результата
 - `terms` — поисковые термины, приведшие к этому результату
 
-Метод может быть пустым, если результат не требует дополнительных действий (например, когда мета-объект предоставляет `clipboardText`).
+Метод может быть пустым, если результат не требует дополнительных действий (например, если ResultMeta объект предоставляет `clipboardText`, и других активностей не предполагается).
 
-Если метод реализован, он должен выполнить соответствующее действие (открыть файл, запустить приложение и т.д.), связанное с **указанным результатом поиска**.
+Если метод реализован, он должен выполнить соответствующее действие (открыть файл, ресурс или запустить приложение и т.д.), связанное с **указанным результатом поиска**.
 
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L248)
 
@@ -327,12 +329,12 @@ launchSearch(terms: string[]): void
 
 - `terms` — текущие поисковые термины
 
-Метод может быть пустым или запустить соответствующее приложение/поисковый ресурс, передав в него поисковые термины.
+Метод может быть пустым (ничего не делать) или запустить соответствующее приложение/поисковый ресурс, передав в него поисковые термины.
 
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L281)
 
 
-# Интерфейс ResultMetaInterface
+# Интерфейс ResultMeta
 
 
 ## Обзор
@@ -360,7 +362,7 @@ id: string
 name: string
 ~~~
 
-Название результата.
+Название результата (лейб/метка).
 
 
 ### `description`
@@ -387,7 +389,6 @@ clipboardText?: string
 - URL веб-страницы
 - Путь к файлу
 - Результат вычисления (для калькуляторов)
-
 и т.п.
 
 
@@ -397,7 +398,7 @@ clipboardText?: string
 createIcon: (size: number) => Clutter.Actor
 ~~~
 
-Функция, возвращающая значок для результата указанного размера.
+Функция, возвращающая значок для результата с указанием размера.
 
 **Параметры**:
 
@@ -421,8 +422,8 @@ ExampleExtension
        :
        : управляет
        :
-       v                                <interface>
- SearchProvider ┈┈ реализует ┈┈▷  SearchProviderInterface
+       v                           <<interface>>
+ SearchProvider ┈┈ реализует ┈┈▷  SearchProvider2
        |
        | расширяет
        |
@@ -436,6 +437,38 @@ ExampleExtension
 - `SearchEngine` можно тестировать независимо вне Shell
 - Поисковый движок можно использовать вне контекста Search Provider
 - `SearchProvider` легко адаптировать для работы с другим поисковым движком
+
+> **NOTE** Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Например, в простых случаях, сам класс расширения может реализовать интерфейс `SearchProvider2`:
+
+  ~~~typescript
+  export default class ExampleExtension extends Extension implements SearchProvider2 {
+  
+      private declare searchProvider: SearchProvider;
+  
+      enable() {
+          // Регистрирует себя как поставщика поиска
+          Main.overview.searchController.addProvider(this);
+      }
+  
+      disable() {
+          // Отмена регистрации
+          Main.overview.searchController.removeProvider(this);
+      }
+  
+      // Реализует интерфейс SearchProvider2
+      id: string = ...;
+      appInfo: Gio.AppInfo = ...;
+      ...
+      async getInitialResultSet(terms, cancellable) {
+          ...
+      }
+      async getResultMetas(identifiers, cancellable) {
+          ...
+      }
+      // и остальные поля интерфейса SearchProvider2
+      ...
+  }
+  ~~~
 
 
 ## Класс `SearchEngine`
@@ -491,16 +524,16 @@ man-страницу и её раздел.
 
 **Ответственности**:
 
-- Реализация интерфейса `SearchProviderInterface`
+- Реализация интерфейса `SearchProvider2`
 - Делегация в `SearchEngine` поисковых запросов
 
 **Наследование и ключевые моменты**:
 
 ~~~typescript
-// Расширяет `SearchEngine` и реализует `SearchProviderInterface`
-class SearchProvider extends SearchEngine implements SearchProviderInterface {
+// Расширяет `SearchEngine` и реализует `SearchProvider2` интерфейс
+class SearchProvider extends SearchEngine implements SearchProvider2 {
 
-    // --- Свойства SearchProviderInterface ---
+    // --- Свойства SearchProvider2 ---
 
     readonly id: string;
 
@@ -511,7 +544,7 @@ class SearchProvider extends SearchEngine implements SearchProviderInterface {
     readonly canLaunchSearch: boolean;
     
 
-    // --- Методы SearchProviderInterface ---
+    // --- Методы SearchProvider2 ---
 
     // Запускает поиск если первый поисковый термин имеет длину хотя бы 2 символа.
     // Делегирует поиск в `searchManPages`.
@@ -526,10 +559,10 @@ class SearchProvider extends SearchEngine implements SearchProviderInterface {
     // Формирует метаданные результата.
     // Получает метаданные через `getPageInfo`.
     // Создает и заполняет объекты метаданных для результатов.
-    async getResultMetas(identifiers: any[], cancellable: Gio.Cancellable): Promise<ResultMetaInterface[]>
+    async getResultMetas(identifiers: any[], cancellable: Gio.Cancellable): Promise<ResultMeta[]>
 
     // Данная реализация всегда возвращает `null`.
-    createResultObject(_resultMeta: ResultMetaInterface): Clutter.Actor | null
+    createResultObject(_resultMeta: ResultMeta): Clutter.Actor | null
 
     // Для активированного результата открывает соответствующую
     // man-страницу в терминале.
