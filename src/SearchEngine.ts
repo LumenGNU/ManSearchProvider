@@ -89,7 +89,7 @@ export class SearchEngine {
      * For each match, a unique identifier is produced in the form `section|pageName`,
      * which can later be used with `getPageInfo()` to retrieve full metadata.
      *
-     * This method never throws — it returns an empty array `[]` on cancellation or 
+     * This method never throws - it returns an empty array `[]` on cancellation or 
      * any error, allowing the search provider to gracefully handle interrupted 
      * searches.
      * 
@@ -140,7 +140,7 @@ export class SearchEngine {
         // GNOME Shell may cancel the search asynchronously, so we must check 
         // cancellation status even after seemingly completed async operations.
 
-        // One last check — GNOME Shell may cancel the operation asynchronously
+        // One last check - GNOME Shell may cancel the operation asynchronously
         if (cancellable?.is_cancelled()) return [];
 
         return identifiers;
@@ -159,7 +159,7 @@ export class SearchEngine {
      * - `title`: formatted as `page (section)` for display in search results
      * - `description`: full description text for the result subtitle
      * 
-     * This method never throws — it returns `null` on cancellation or any error,
+     * This method never throws - it returns `null` on cancellation or any error,
      * allowing the search provider to skip unavailable results gracefully.
      * 
      * See:
@@ -203,7 +203,7 @@ export class SearchEngine {
         // Extract the single result: [page, section, description]
         const pageInfoTuple = parsedResults[0];
 
-        // One last check — GNOME Shell may cancel the operation asynchronously
+        // One last check - GNOME Shell may cancel the operation asynchronously
         if (cancellable?.is_cancelled()) return null;
 
         // Format result for ResultMeta: title as "page (section)" and full description

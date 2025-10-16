@@ -1,5 +1,22 @@
+/**
+ * @license CC0-1.0
+ * The author dedicates this file to the public domain via CC0 1.0 Universal.
+ * 
+ * To the extent possible under law, the author has waived all copyright
+ * and related or neighboring rights to this work.
+ * 
+ * You can copy, modify, distribute and perform the work, even for commercial
+ * purposes, all without asking permission.
+ * 
+ * Note: This dedication applies to this file as provided. Recipients may
+ * incorporate it into projects with different licensing terms.
+ * 
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
 import type Gio from 'gi://Gio';
 import type Clutter from 'gi://Clutter';
+
 
 /**  Contract interface between GNOME Shell and Shell extensions that implement
  * a search provider.
@@ -101,7 +118,7 @@ export interface SearchProviderInterface {
  * 
  * Used by Shell to display search results.
  * 
- * [See search provider implementation example for more information](https://github.com/LumenGNU/ManSearchProvider) */
+ * [See Search Provider Implementation Example for more information](https://github.com/LumenGNU/ManSearchProvider) */
 export interface ResultMetaInterface {
 
     /** Unique identifier of the result */
