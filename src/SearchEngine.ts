@@ -1,3 +1,19 @@
+/**
+ * @license CC0-1.0
+ * The author dedicates this file to the public domain via CC0 1.0 Universal.
+ * 
+ * To the extent possible under law, the author has waived all copyright
+ * and related or neighboring rights to this work.
+ * 
+ * You can copy, modify, distribute and perform the work, even for commercial
+ * purposes, all without asking permission.
+ * 
+ * Note: This dedication applies to this file as provided. Recipients may
+ * incorporate it into projects with different licensing terms.
+ * 
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
@@ -20,6 +36,29 @@ export class CancelledError extends Error {
  * 
  * This class is part of an example implementation of a search provider for 
  * GNOME Shell.
+ *
+ * ## Architecture Notes
+ * 
+ * This class is designed as a **base search engine** that implements the core 
+ * search logic. The architectural intent is:
+ * 
+ * - **Inheritance approach** (primary design): A subclass extending this engine 
+ *   should implement the `SearchProvider2` interface from GNOME Shell, integrating 
+ *   this search engine into the Shell's search system. This is why methods are 
+ *   marked as `protected` rather than `public` - they form an internal API for 
+ *   the inheriting search provider class.
+ * 
+ * - **Alternative approaches**: This is just one way to structure a search provider.
+ *   Your implementation might use composition, functional programming, services, 
+ *   or any other pattern that fits your project's needs. Don't follow this example 
+ *   blindly - analyze your requirements and choose an architecture that makes sense 
+ *   for your specific use case.
+ * 
+ * The `protected` visibility reflects my design choice for this particular example.
+ * Evaluate what works best for your extension rather than copying patterns without 
+ * understanding their trade-offs.
+ * 
+ * ## Core Methods
  * 
  * It provides two main methods used by the search provider:
  * 
@@ -34,8 +73,7 @@ export class CancelledError extends Error {
  * Both methods are asynchronous and implement cancellation support via 
  * `Gio.Cancellable`, which is crucial for search provider implementation. This 
  * allows GNOME Shell to cancel ongoing searches when the user types new queries, 
- * ensuring responsive search behavior.
- */
+ * ensuring responsive search behavior. */
 export class SearchEngine {
 
     /** Searches for manual pages matching the given terms.
@@ -322,7 +360,7 @@ export class SearchEngine {
 }
 
 
-// - - - - -
+// ==================================================
 /** Debugging and Prototyping Block
  * 
  * This section is a sandbox for rapidly debugging, prototyping, and manually 
@@ -350,7 +388,7 @@ export class SearchEngine {
  *   verify critical internal methods.
  * 
  * - No Test Framework: It provides a lightweight, quick-check mechanism, 
- *   intentionally not a replacement for a formal test suite like Gjs-Jasmine, 
+ *   intentionally not a replacement for a formal test suite like 'Jasmine GJS', 
  *   which should be used for comprehensive, automated testing.
  * 
  * - Prototyping: It's a convenient place to test complex logic, error handling, 
@@ -374,10 +412,18 @@ export class SearchEngine {
  * run build && /usr/bin/env -S G_MESSAGES_DEBUG=Gjs-Console gjs -m ./dist/SearchEngine.js
  * ~~~
  * 
+ * See:
+ * - {@link https://gjs-docs.gnome.org/gjs-mainloop/ |  Mainloop module GJS}
+ * - {@link https://gjs.guide/guides/gjs/asynchronous-programming.html | Asynchronous Programming}
+ * - {@link https://gjs.guide/extensions/development/debugging.html#gjs-console | Debug in GJS Console}
+ * - {@link https://github.com/ptomato/jasmine-gjs | Jasmine GJS}
+ * 
  * */
-// /* Uncomment if you want to use
+/* Uncomment if you want to use it
+// ===============================
 (async function test_block() {
     const System = imports.system;
+    // to prevent execution in production
     if (import.meta.url.split('/').pop() !== System.programInvocationName.split('/').pop()) {
         console.warn(`Module ${import.meta.url} contains a sandbox block!`);
     }
@@ -385,6 +431,7 @@ export class SearchEngine {
 
         // === Sandbox Block Boundary ===
 
+        // Helper to compare arrays
         function arraysEqual<T>(a: T[], b: T[]): boolean {
             return a.length === b.length &&
                 JSON.stringify(a) === JSON.stringify(b);
@@ -392,67 +439,74 @@ export class SearchEngine {
 
         async function main() {
 
-            console.log('\n\n\n=== Sandbox Start ===\n\n');
+            print('\n' + '='.repeat(50));
+            print('SANDBOX TEST SUITE START');
+            print('='.repeat(50));
 
             const searchEngine = new SearchEngine();
 
-            // проверяем что `parseOutput` даст одинаковый результат как ... так и
+            // Test parseOutput method
             if ('parseOutput' in searchEngine && typeof searchEngine['parseOutput'] === 'function') {
 
-                console.assert(
-                    arraysEqual(
-                        searchEngine['parseOutput']('ls (1) - list directory contents')[0],
-                        ["ls", "1", "list directory contents"]),
-                    'nooooooooooooooooo'
-                );
+                print('');
+                print('Test: `parseOutput` method');
+                print('-'.repeat(30));
 
-                // должен правильно работать как с \n так и с \0
-                const testLines1 = "" +
-                    "aaa (1)   - ccc\n" +
-                    "bbb (2)   - xxx\n";
+                // Basic parsing test
 
-                const testLines2 = "" +
-                    "aaa (1)   - ccc\0" +
-                    "bbb (2)   - xxx\0";
+                const result1 = searchEngine['parseOutput']('ls (1) - list directory contents')[0];
+                const expected1 = ["ls", "1", "list directory contents"];
 
-                console.assert(
-                    arraysEqual(
-                        searchEngine['parseOutput'](testLines1),
-                        searchEngine['parseOutput'](testLines2)
-                    ),
-                    'noooooooooooooooooooo2'
-                );
+                if (arraysEqual(result1, expected1)) { console.log('Basic parsing: PASSED'); }
+                else { console.error('Failed: Basic parsing'); }
 
-                console.log(
+                // Test with both \n and \0 separators
 
-                    searchEngine['parseOutput'](testLines1),
-                    searchEngine['parseOutput'](testLines2)
-                );
+                const testLines1 = "aaa (1)   - ccc\nbbb (2)   - xxx\n";
+                const testLines2 = "aaa (1)   - ccc\0bbb (2)   - xxx\0";
+
+                const parsed1 = searchEngine['parseOutput'](testLines1);
+                const parsed2 = searchEngine['parseOutput'](testLines2);
+
+                if (arraysEqual(parsed1, parsed2)) { console.log('Separator handling (\\n vs \\0): PASSED'); }
+                else { console.error('Failed: Separator handling'); }
 
             }
 
-            console.log('--- ---');
-
+            // Test getPageInfo method
             if ('getPageInfo' in searchEngine && typeof searchEngine['getPageInfo'] === 'function') {
 
-                console.assert(await searchEngine['getPageInfo']('1|printf') !== null, 'naht!!!!');
-                console.assert(await searchEngine['getPageInfo']('225|pupa') === null, 'nayn! nayn! nayn!'); // оказалось достаточно трудным найти не существующую команду
+                print('');
+                print('Test: `getPageInfo` method');
+                print('-'.repeat(30));
+
+                // Test existing page
+
+                const existingPage = await searchEngine['getPageInfo']('1|printf');
+
+                if (existingPage !== null) { console.log('Existing page (1|printf): FOUND'); }
+                else { console.error('Failed: Existing page retrieval'); }
+
+                // Test non-existing page
+
+                const nonExistingPage = await searchEngine['getPageInfo']('225|nonexistent');
+
+                if (nonExistingPage === null) { console.log('Non-existing page: CORRECTLY RETURNED NULL'); }
+                else { console.error('Failed: Non-existing page check'); }
             }
 
-            console.log('--- ---');
-
-
-            // Test Т: Cancellation during a long-running subprocess
-            // This is critical for a responsive GNOME Shell search provider. This test 
-            // verifies that cancellation stops the external command and prevents errors.
+            // Test cancellation mechanism
             if ('runSubprocess' in searchEngine && typeof searchEngine['runSubprocess'] === 'function') {
 
+                print('');
+                print('Test: Cancellation mechanism');
+                print('-'.repeat(30));
+
+                // Test cancel long-running process
                 const cancellable = new Gio.Cancellable();
-                const command = "apropos --and '..'"; // это найдет все страницы, что может занять время
+                const command = "apropos --and '..'"; // Finds all pages (potentially slow)
 
-                console.log('Test 1: Testing cancellation of long-running process...');
-
-                // Schedule the cancellation to happen almost immediately
+                // Schedule cancellation after 30ms
                 GLib.timeout_add(GLib.PRIORITY_DEFAULT, 30, () => {
                     cancellable.cancel();
                     return GLib.SOURCE_REMOVE;
@@ -464,48 +518,83 @@ export class SearchEngine {
                 console.assert(result1 === null, 'Test 1 Failed: runSubprocess did not return null after cancellation.');
                 console.log(`Test 1 Result: ${result1 === null ? 'Passed' : 'Failed'}. (Expected: null)`);
 
-                // если не прерывать - та же команда найдет много результатов
-                const result2 = await searchEngine['runSubprocess'](command);
-                console.assert((result2?.length ?? 0) > 0, '....');
-                console.log(`Test 1 Result: ...`);
+                if (result1 === null) { console.log('Cancellation: SUCCESSFUL'); }
+                else { console.error('Failed: Process was not cancelled'); }
 
-                // можешь проверить в терминале что не осталось высящих процессов:
-                // 〉pgrep apropos | wc -l
+                // Test same command without cancellation
+                console.log('Running same command without cancellation...');
+                const normalResult = await searchEngine['runSubprocess'](command);
+                const hasResults = (normalResult?.length ?? 0) > 0;
+                if (!hasResults) { console.error('Failed: Normal execution'); }
+                console.log(`Normal execution: FOUND ${normalResult?.length ?? 0} results`);
+            }
+
+            // Test multiple concurrent cancellations
+            if ('runSubprocess' in searchEngine && typeof searchEngine['runSubprocess'] === 'function') {
+
+                print('');
+                print('Test: Concurrent process cancellation');
+                print('-'.repeat(30));
+
+                const infiniteCommand = "sleep infinity"; // Never-ending process
+
+                // Start three concurrent processes
+                const cancellable1 = new Gio.Cancellable();
+                const cancellable2 = new Gio.Cancellable();
+                const cancellable3 = new Gio.Cancellable();
+
+                searchEngine['runSubprocess'](infiniteCommand, cancellable1);
+                searchEngine['runSubprocess'](infiniteCommand, cancellable2);
+                searchEngine['runSubprocess'](infiniteCommand, cancellable3);
+
+                console.log('Started 3 concurrent infinite processes');
+
+                // Cancel all processes
+                cancellable1.cancel();
+                cancellable2.cancel();
+                cancellable3.cancel();
+
+                console.log('All processes cancelled');
+                console.log('Note: Verify no orphaned processes with: pgrep sleep | wc -l');
 
             }
 
-
-            // Test T: searchManPages with empty terms
-            // Input/Output Edge Case (Empty Terms)
-            // Ensure searchManPages gracefully handles no input terms, which should result 
-            // in an empty array and avoid running an unnecessary, potentially broad command
-            //  like "apropos --and"
-            // Но, это невероятная ситуация для поискового провайдера в GNOME Shell.
+            // Test edge case: empty search terms
             if ('searchManPages' in searchEngine && typeof searchEngine['searchManPages'] === 'function') {
-                console.log('Test 2: Testing searchManPages with empty terms...');
-                const emptyResult = await searchEngine['searchManPages']([]);
 
-                // выполнит команду, но парсер не сможет парсить ответ
-                console.assert(arraysEqual(emptyResult, []), 'Test 2 Failed: searchManPages with [] did not return [].');
-                console.log(`Test 2 Result: ${arraysEqual(emptyResult, []) ? 'Passed' : 'Failed'}. (Expected: [])`);
+                print('');
+                print('Test: Edge case - empty search terms');
+                print('-'.repeat(30));
+
+                const emptyResult = await searchEngine['searchManPages']([]);
+                const isEmptyArray = arraysEqual(emptyResult, []);
+
+                if (isEmptyArray) { console.log('Empty search terms: CORRECTLY RETURNED []'); }
+                else { console.error('Failed: Empty terms handling'); }
             }
 
 
-            // Test 3: getPageInfo for a specific page (e.g., 'bash')
-            // Specific getPageInfo Retrieval(Data Integrity)
-            // Verify that a specific, known page is retrieved correctly with its full, 
-            // untruncated description.
+            // Test specific page retrieval
             if ('getPageInfo' in searchEngine && typeof searchEngine['getPageInfo'] === 'function') {
-                console.log('Test 3: Testing getPageInfo for a known page (1|bash)...');
+
+                print('');
+                print('Test: Known page retrieval (bash)');
+                print('-'.repeat(30));
 
                 const bashInfo = await searchEngine['getPageInfo']('1|bash');
+                const isValid = bashInfo !== null &&
+                    bashInfo[0] === 'bash (1)' &&
+                    bashInfo[1].length > 10;
 
-                // Check for correct format and non-empty description
-                const isCorrect = bashInfo !== null && bashInfo[0] === 'bash (1)' && bashInfo[1].length > 10;
-
-                console.assert(isCorrect, 'Test 3 Failed: getPageInfo for 1|bash returned unexpected data or format.');
-                console.log(`Test 3 Result: ${isCorrect ? 'Passed' : 'Failed'}. (Title: ${bashInfo ? bashInfo[0] : 'null'})`);
+                if (isValid) {
+                    console.log(`Retrieved: ${bashInfo[0]}`);
+                    console.log(`Description length: ${bashInfo[1].length} chars`);
+                }
+                else { console.error('Failed: bash page retrieval'); }
             }
+
+            print('');
+            print('='.repeat(50));
 
 
         }
@@ -515,10 +604,10 @@ export class SearchEngine {
 
         main()
             .catch((error) => {
-                console.error('Sandbox Main Function Unexpected Error:', error);
+                console.error('ERROR: Sandbox execution failed:', error);
             })
             .finally(() => {
-                console.log('\n\n\nSandbox: C-c to exit');
+                print('\n\nPress Ctrl+C to exit');
             });
 
         await new GLib.MainLoop(null, false).runAsync();
@@ -526,6 +615,6 @@ export class SearchEngine {
     }
 })()
     .catch(error => {
-        console.error('Sandbox Unexpected Error:', error);
+        console.error('FATAL: Sandbox Unexpected Error:', error);
     });
-// */
+*/
