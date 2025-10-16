@@ -439,36 +439,36 @@ ExampleExtension
 - `SearchProvider` легко адаптировать для работы с другим поисковым движком
 
 > **NOTE** Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Например, в простых случаях, сам класс расширения может реализовать интерфейс `SearchProvider2`:
-
-  ~~~typescript
-  export default class ExampleExtension extends Extension implements SearchProvider2 {
-  
-      private declare searchProvider: SearchProvider;
-  
-      enable() {
-          // Регистрирует себя как поставщика поиска
-          Main.overview.searchController.addProvider(this);
-      }
-  
-      disable() {
-          // Отмена регистрации
-          Main.overview.searchController.removeProvider(this);
-      }
-  
-      // Реализует интерфейс SearchProvider2
-      id: string = ...;
-      appInfo: Gio.AppInfo = ...;
-      ...
-      async getInitialResultSet(terms, cancellable) {
-          ...
-      }
-      async getResultMetas(identifiers, cancellable) {
-          ...
-      }
-      // и остальные поля интерфейса SearchProvider2
-      ...
-  }
-  ~~~
+>
+> ~~~typescript
+> export default class ExampleExtension extends Extension implements SearchProvider2 {
+> 
+>     private declare searchProvider: SearchProvider;
+> 
+>     enable() {
+>         // Регистрирует себя как поставщика поиска
+>         Main.overview.searchController.addProvider(this);
+>     }
+> 
+>     disable() {
+>         // Отмена регистрации
+>         Main.overview.searchController.removeProvider(this);
+>     }
+> 
+>     // Реализует интерфейс SearchProvider2
+>     id: string = this.uuid;
+>     appInfo: Gio.AppInfo = ...;
+>     //...
+>     async getInitialResultSet(terms, cancellable) {
+>         //...
+>     }
+>     async getResultMetas(identifiers, cancellable) {
+>         //...
+>     }
+>     // и остальные поля интерфейса SearchProvider2
+>     //...
+> }
+> ~~~
 
 
 ## Класс `SearchEngine`
