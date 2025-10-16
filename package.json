@@ -26,7 +26,7 @@
     "project:install-extension": "[ -e $npm_package_config_DIST_DIR ] && { npm run project:clear-extension; npm run project:mkdir-extension && echo 'Install...'; cp -r ./dist/* metadata.json `eval echo \"$npm_package_config_EXTENSION_DIR/$npm_package_config_ID/\"` && echo '... done'; } || echo 'ERROR: Nothing to install. Run \"npm run build\" first'",
 
     "nested-shell:start": "$npm_package_config_TERMINAL --title='gnome-shell debug output' $npm_package_config_TERMINAL_PARAM bash -c 'env GNOME_SHELL_SLOWDOWN_FACTOR=2 MUTTER_DEBUG_DUMMY_MODE_SPECS=1280x720 LC_ALL=$npm_package_config_LANG G_MESSAGES_DEBUG=GNOME\\ Shell dbus-run-session -- gnome-shell --nested --wayland' &>/dev/null; echo '...Nested Shell started'",
-    "nested-shell:stop": "pkill -f 'gnome-shell --nested --wayland' && echo '...Nested Shell stopped'",
+    "nested-shell:stop": "pkill -f 'gnome-shell --nested --wayland'",
     "nested-shell:restart": "npm run nested-shell:stop; sleep 1; npm run nested-shell:start"
 
   },

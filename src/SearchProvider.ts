@@ -1,8 +1,3 @@
-import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-import { AppSearchProvider } from "resource:///org/gnome/shell/ui/appDisplay.js";
-
-import * as Search from 'resource:///org/gnome/shell/ui/search.js';
-
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
@@ -10,6 +5,7 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import Shell from "gi://Shell";
 
+// @todo
 import {
     ResultMetaInterface,
     SearchProviderInterface
@@ -40,12 +36,12 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
     /** AppInfo поставщика */
     get appInfo(): Gio.AppInfo | null {
 
-        // Можно вернуть фейковый AppInfo для 
-        // return Gio.AppInfo.get_default_for_type('x-scheme-handler/help', false);
-
         // Если вернуть null поставщиком будет GNOME Shell, а результаты будут
-        // отображены как значки (не список) вне какой либо группы
+        // отображены как значки а не список
         // return null;
+
+        // Можно вернуть фейковый AppInfo, например yelp
+        // return Gio.AppInfo.get_default_for_type('x-scheme-handler/help', false);
 
         // В этом примере поиск будет проводится "от лица" `gnome-terminal`
         // что значит что результаты будут сгруппированы в блок со значком терминала
@@ -59,7 +55,7 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
     get canLaunchSearch(): boolean {
         // Будет отображаться всегда если `filterResults`
         // отбросил часть результатов
-        return false;
+        return true;
     }
 
 
@@ -86,7 +82,7 @@ export class SearchProvider extends SearchEngine implements SearchProviderInterf
         if (cancellable.is_cancelled()) return [];
 
 
-        // Должен быть хотя бы один термин и хотя бы 2 символа
+        // Начинаем поиска если есть хотя бы один термин длинною хотя бы 2 символа
         if ((terms[0]?.length ?? 0) < 2) return [];
 
         console.debug(`SearchProvider: getInitialResultSet> start 'searchManPages' ...`);

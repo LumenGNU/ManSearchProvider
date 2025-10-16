@@ -559,18 +559,18 @@ class SearchProvider extends SearchEngine implements SearchProviderInterface {
 ~~~typescript
 export default class ExampleExtension extends Extension {
 
-    private declare search_provider: SearchProvider;
+    private declare searchProvider: SearchProvider;
 
     enable() {
         // Создание и регистрация поставщика
-        this.search_provider = new SearchProvider(this.uuid);
-        Main.overview.searchController.addProvider(this.search_provider);
+        this.searchProvider = new SearchProvider(this.uuid);
+        Main.overview.searchController.addProvider(this.searchProvider);
     }
 
     disable() {
         // Отмена регистрации поставщика
-        Main.overview.searchController.removeProvider(this.search_provider);
-        this.search_provider = null as never;
+        Main.overview.searchController.removeProvider(this.searchProvider);
+        this.searchProvider = null as never;
     }
 
 }

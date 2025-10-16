@@ -1,227 +1,531 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-// промисификация необходимого api
+// Promisify Gio async methods to use with async/await
 Gio._promisify(Gio.Subprocess.prototype, 'communicate_utf8_async');
 Gio._promisify(Gio.Subprocess.prototype, 'wait_async');
 
-/** Поисковый "движок" */
+// Tuple type for man page metadata: [name, section, description]
+type ManPageMetaInfo = [pageName: string, section: string, description: string];
+
+// Custom error class for operation cancellation
+export class CancelledError extends Error {
+    constructor() {
+        super('Operation cancelled');
+        this.name = 'CancelledError';
+    }
+}
+
+/** Search engine for system manual pages.
+ * 
+ * This class is part of an example implementation of a search provider for 
+ * GNOME Shell.
+ * 
+ * It provides two main methods used by the search provider:
+ * 
+ * - `searchManPages()` - Searches for and builds a list of identifiers for 
+ *   found manual pages.  
+ *   Used in `getInitialResultSet()` to populate search results.
+ * 
+ * - `getPageInfo()` - Returns metadata for a page by its identifier.  
+ *   Used in `getResultMetas()` to build `ResultMeta` objects for display in 
+ *   the Shell.
+ * 
+ * Both methods are asynchronous and implement cancellation support via 
+ * `Gio.Cancellable`, which is crucial for search provider implementation. This 
+ * allows GNOME Shell to cancel ongoing searches when the user types new queries, 
+ * ensuring responsive search behavior.
+ */
 export class SearchEngine {
 
-
-    /** Поиск man-страниц по ключевому слову
+    /** Searches for manual pages matching the given terms.
+     *
+     * This method is designed to be called from `getInitialResultSet()` in the 
+     * search provider implementation. It queries the system man database using the 
+     * `apropos` command with all specified search terms.
      * 
-     * *NOTE* Shell должен иметь возможность прервать поиск в любой момент
+     * **NOTE** The search uses the `apropos --and` flag, meaning all provided
+     * search terms must be present in a manual page's description for it to be 
+     * considered a match. This provides a more specific and narrow set of results.
      * 
-     * @param terms Массив поисковых терминов
-     * @param cancellable Объект для отмены операции
-     * @returns Массив идентификаторов в формате `command|section` */
-    protected async searchManPages(terms: string[], cancellable: Gio.Cancellable): Promise<string[]> {
+     * For each match, a unique identifier is produced in the form `section|pageName`,
+     * which can later be used with `getPageInfo()` to retrieve full metadata.
+     *
+     * This method never throws — it returns an empty array `[]` on cancellation or 
+     * any error, allowing the search provider to gracefully handle interrupted 
+     * searches.
+     * 
+     * See:
+     * - {@link runSubprocess | runSubprocess Method}
+     * - {@link ManPageMetaInfo | ManPageMetaInfo Type}
+     *
+     * @param terms - List of search terms from the user's query
+     * @param cancellable - Optional `Gio.Cancellable` to support early termination
+     * @returns an array of identifiers in the form `section|pageName` */
+    protected async searchManPages(terms: string[], cancellable?: Gio.Cancellable): Promise<string[]> {
 
         // console.debug('\n' +
-        //     `SearchEngine: searchManPages(terms: ${JSON.stringify(terms, null, 2)}), ` +
-        //     `cancellable: ${cancellable.constructor.name}`
+        //     `SearchEngine: searchManPages(terms: ${JSON.stringify(terms)}), ` +
+        //     `cancellable: ${cancellable?.constructor.name}`
         // );
 
-        // Ранний выход если операция уже отменена
-        if (cancellable.is_cancelled()) return [];
+        // Abort early if already cancelled
+        if (cancellable?.is_cancelled()) return [];
 
-        // Формируем команду `apropos` с поиском по всем терминам переданным в `terms`
-        const [success, argv] = GLib.shell_parse_argv(
-            `apropos --and ${terms.join(' ')}`
-        );
+        // Run `apropos` to search the man database for all provided terms.
+        // Returns an array of `ManPageMetaInfo` tuples for matching pages.
+        // Debugging tip: Replace with `sleep infinity` to emulate an infinitely long 
+        // search and observe when and under what conditions the GNOME Shell runtime 
+        // cancels this operation.
+        const parsedResults = await this.runSubprocess(`apropos --and ${terms.join(' ')}`, cancellable);
 
-        // Или можно эмулировать бесконечно долгий поиск для понимания в какие моменты
-        // Shell будет прерывать поиск
-        // const [success, argv] = GLib.shell_parse_argv('sleep infinity');
-
-        if (!success || argv === null) {
-            console.error('SearchEngine: searchManPages> Failed to parse command');
+        // Handle cancellation, errors, or empty results
+        if (
+            parsedResults === null ||
+            parsedResults.length === 0 ||
+            cancellable?.is_cancelled()
+        ) {
+            console.debug("SearchEngine: searchManPages> 'apropos' cancelled or returned empty results");
             return [];
-        };
+        }
 
-        console.debug(`SearchEngine: searchManPages> Spawn subprocess: ${argv.join(' ')}`);
+        // Build unique identifiers for search results
+        // Format: `section|pageName` - this will be passed back to `getPageInfo()`
+        // Note: we discard the description from apropos since it may be truncated.
+        // Full descriptions will be fetched later via `getPageInfo()` using `whatis`.
+        const identifiers = parsedResults.map(([pageName, section, _]) => {
+            return `${section}|${pageName}`;
+        });
 
-        // Запускаем подпроцесс `apropos` с перехватом stdout и stderr
-        const apropos = Gio.Subprocess.new(
+        // **IMPORTANT**: cancellable can be interrupted at any moment from 
+        // **another thread**, and this is not a synchronous JavaScript event. 
+        // GNOME Shell may cancel the search asynchronously, so we must check 
+        // cancellation status even after seemingly completed async operations.
+
+        // One last check — GNOME Shell may cancel the operation asynchronously
+        if (cancellable?.is_cancelled()) return [];
+
+        return identifiers;
+    }
+
+
+    /** Retrieves a detailed description of a manual page as a tuple 
+     * `[title, description]` to build a `ResultMeta` object.
+     * 
+     * This method is designed to be called from `getResultMetas()` in the search 
+     * provider implementation. It fetches the full description for a specific 
+     * manual page using the `whatis` command, which preserves complete description 
+     * text.
+     * 
+     * The returned tuple contains:
+     * - `title`: formatted as `page (section)` for display in search results
+     * - `description`: full description text for the result subtitle
+     * 
+     * This method never throws — it returns `null` on cancellation or any error,
+     * allowing the search provider to skip unavailable results gracefully.
+     * 
+     * See:
+     * - {@link runSubprocess | runSubprocess Method}
+     * - {@link ManPageMetaInfo | ManPageMetaInfo Type}
+     *
+     * @param identifier - Unique page identifier in the form `section|page` (from `searchManPages()`)
+     * @param cancellable - Optional `Gio.Cancellable` to support early termination
+     * @returns a tuple `[title, description]` or `null` if cancelled or failed */
+    protected async getPageInfo(
+        identifier: string,
+        cancellable?: Gio.Cancellable
+    ): Promise<[title: string, description: string] | null> {
+
+        // console.debug('\n' +
+        //     `SearchEngine: getPageInfo(terms: ${identifier}, ` +
+        //     `cancellable: ${cancellable?.constructor.name}`
+        // );
+
+        // Abort early if already cancelled
+        if (cancellable?.is_cancelled()) return null;
+
+        // Run `whatis` to obtain the full page description.
+        // Split identifier "section|page" for whatis arguments.
+        // Returns an array with a single `ManPageMetaInfo` tuple.
+        // Debugging tip: Replace with `sleep infinity` to emulate an infinitely long 
+        // search and observe when and under what conditions the GNOME Shell runtime 
+        // cancels this operation.
+        const parsedResults = await this.runSubprocess(`whatis -l -s ${identifier.split('|').join(' ')}`, cancellable);
+
+        // Handle cancellation, errors, or empty results
+        if (
+            parsedResults === null ||
+            parsedResults.length === 0 ||
+            cancellable?.is_cancelled()
+        ) {
+            console.debug("SearchEngine: getPageInfo> 'whatis' cancelled or returned empty results");
+            return null;
+        }
+
+        // Extract the single result: [page, section, description]
+        const pageInfoTuple = parsedResults[0];
+
+        // One last check — GNOME Shell may cancel the operation asynchronously
+        if (cancellable?.is_cancelled()) return null;
+
+        // Format result for ResultMeta: title as "page (section)" and full description
+        return [`${pageInfoTuple[0]} (${pageInfoTuple[1]})`, pageInfoTuple[2]];
+
+    }
+
+
+    /** Runs a command and returns parsed output as an array of `ManPageMetaInfo` 
+     * tuples.
+     * 
+     * Core utility method for executing `whatis` or `apropos` commands with proper
+     * cancellation support. This ensures the search provider can interrupt long-running
+     * operations.
+     * 
+     * Returns `null` on cancellation or any error (never throws), maintaining
+     * the robustness required for GNOME Shell integration.
+     * 
+     * See:
+     * - {@link parseOutput | parseOutput method}
+     * - {@link ManPageMetaInfo | ManPageMetaInfo Type}
+     *
+     * @param command - Full command line to execute
+     * @param cancellable - Optional `Gio.Cancellable` for cooperative cancellation */
+    private async runSubprocess(command: string, cancellable?: Gio.Cancellable): Promise<ReturnType<SearchEngine['parseOutput']> | null> {
+
+        // console.debug('\n' +
+        //     `SearchEngine: runSubprocess(command: '${command}', ` +
+        //     `cancellable: ${cancellable?.constructor.name}`
+        // );
+
+        // Abort early if the operation was already cancelled by Shell
+        if (cancellable?.is_cancelled()) return null;
+
+        // Parse command string into argv array.
+        // `shell_parse_argv` does not perform shell expansions, thereby reducing 
+        // the risk of additional commands being executed (command injection).
+        const [success, argv] = GLib.shell_parse_argv(command);
+
+        // Stop if the command line could not be parsed
+        if (!success || argv === null) {
+            console.error(`SearchEngine: runSubprocess> Failed to parse command: '${command}'`);
+            return null;
+        }
+
+        console.debug(`SearchEngine: runSubprocess> Run subprocess: '${argv.join(' ')}'`);
+
+        // Create subprocess capturing both stdout and stderr
+        const subprocess = Gio.Subprocess.new(
             argv,
             Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
         );
 
         try {
 
-            // Ожидаем завершения `apropos` с возможностью отмены
-            await apropos.wait_async(cancellable);
+            // Read process output asynchronously with cancellable
+            const [stdout, stderr] = await subprocess.communicate_utf8_async(null, cancellable ?? null);
 
-            // Получаем вывод процесса
-            const [stdout, stderr] = await apropos.communicate_utf8_async(null, cancellable);
+            // Log stderr output (useful for debugging)
+            if (stderr?.trim() !== '') console.warn(`SearchEngine: runSubprocess> Subprocess error message: ${stderr}`);
 
-            // Логируем ошибки `apropos` если есть (для отладки)
-            if (stderr || stderr.trim() !== '') {
-                console.error(`SearchEngine: searchManPages> Apropos error message: ${stderr}`);
-            }
+            // Delegate actual parsing; may throw `CancelledError` internally
+            return this.parseOutput(stdout, cancellable);
 
-            // Проверяем наличие результата
-            if (!stdout?.trim()) return [];
-
-            // Парсим и возвращаем результат
-            return this.parseAproposOutput(stdout, cancellable);
 
         } catch (error) {
 
-            /* Обработка ошибок поиска и прерывания */
-
-            if (error instanceof Gio.IOErrorEnum && error.code === Gio.IOErrorEnum.CANCELLED) {
-
-                // Если Gio.IOErrorEnum.CANCELLED - значит Shell принудительно остановил поиск.
-                // Нужно остановить процесс и вернуть пустой результат
-                console.debug('SearchEngine: searchManPages> Search cancelled by Shell');
-
-                apropos.force_exit();
-                // Принудительно завершаем `apropos`
-                // force_exit() безопасна на Unix - можно вызывать многократно без ошибок
-
-                console.debug('SearchEngine: searchManPages> Subprocess force terminated');
+            // Handle both Gio and custom cancellation errors
+            if (
+                (error instanceof GLib.Error && error.matches(Gio.io_error_quark(), Gio.IOErrorEnum.CANCELLED)) ||
+                error instanceof CancelledError
+            ) {
+                console.debug('SearchEngine: runSubprocess> Process cancelled by Shell');
             }
             else {
-                console.error('SearchEngine: searchManPages> Unexpected error:', error);
+                console.error('SearchEngine: runSubprocess> Unexpected error:', error);
             }
 
-            // При любой ошибке возвращаем пустой результат
-            return [];
+            return null;
+
+        }
+        finally {
+
+            // Always ensure subprocess termination to prevent resource leaks
+            // in the search provider. force_exit() is idempotent and safe on Unix
+            console.debug('SearchEngine: runSubprocess> Subprocess force exit');
+            subprocess?.force_exit();
         }
     }
 
-    /** Парсинг вывода команды `apropos`
+
+    /** Parses output from 'whatis' or 'apropos' commands into structured data.
      * 
-     * @param stdout Вывод команды `apropos`
-     * @param cancellable Объект для отмены операции
-     * @returns Массив строковых идентификаторов в виде `pageName|section` */
-    private parseAproposOutput(stdout: string, cancellable: Gio.Cancellable): string[] {
+     * Converts raw command output into typed tuples that can be used to build
+     * search results and metadata for the GNOME Shell search provider.
+     * 
+     * Supports cancellation even during parsing to ensure responsive search behavior.
+     * 
+     * See:
+     * - {@link ManPageMetaInfo ManPageMetaInfo Type}
+     * 
+     * @param stdout - Raw output string from the command
+     * @param cancellable - Optional `Gio.Cancellable` for cooperative cancellation
+     * @returns Array of tuples containing `[pageName, section, description]`.
+     * 
+     * @throws {CancelledError} If operation is cancelled via cancellable */
+    private parseOutput(stdout: string, cancellable?: Gio.Cancellable | null): ManPageMetaInfo[] {
 
-        // подготавливаем идентификаторы
-        const identifiers: string[] = [];
+        // console.debug('\n' +
+        //     `SearchEngine: parseOutput(stdout: '\n${stdout}\n', ` +
+        //     `cancellable: ${cancellable?.constructor.name ?? 'no'}`
+        // );
 
-        const lines = stdout.split('\n').filter(line => line.trim());
+        // Abort early if the operation was already cancelled
+        if (cancellable?.is_cancelled()) throw new CancelledError();
+
+        // Initialize result array for parsed man page entries
+        const results: [
+            pageName: string,
+            section: string,
+            description: string
+        ][] = [];
+
+        // Split by newlines or null chars, filter out empty lines
+        const lines = stdout.trim().split(/[\n\0]/).filter(line => line.trim());
 
         for (const line of lines) {
 
-            // Проверяем отмену во время обработки
-            if (cancellable.is_cancelled()) {
-                console.debug('SearchEngine: parseAproposOutput> Parsing cancelled');
-                return [];
-            }
+            // Parse man page format: "page (section) - description"
+            // Example: "ls (1) - list directory contents"
+            const match = line.match(/^([^\s]+)\s*\(([^)]+)\)\s*-\s*(.+)/);
 
-            // Формируем идентификатор `pageName|section` для каждой не пустой троки
-            // Регулярное выражение для формата apropos: page (section) - short description
-            const match = line.match(/^([^\s]+)\s*\(([^)]+)\)\s*-\s*(.+)$/);
             if (match) {
-                const [, pageName, section] = match;
-                identifiers.push(`${pageName.trim()}|${section.trim()}`);
-            }
-        }
-
-        // Проверяем отмену перед возвратом результата
-        if (cancellable.is_cancelled()) {
-            console.debug('SearchEngine: parseAproposOutput> Parsing cancelled');
-            return [];
-        }
-        else {
-            console.debug(`SearchEngine: parseAproposOutput> Found ${identifiers.length} results`);
-            return identifiers;
-        }
-    }
-
-    /** Получает полное описание
-     * 
-     * *NOTE* Shell должен иметь возможность прервать поиск в любой момент
-     * 
-     * Возвращает строку - описание или null
-     */
-    protected async getPageInfo(identifier: string, cancellable: Gio.Cancellable): Promise<[title: string, description: string] | null> {
-
-        // console.debug('\n' +
-        //     `SearchEngine: getDescription(terms: ${identifier}, ` +
-        //     `cancellable: ${cancellable.constructor.name}`
-        // );
-
-        // Ранний выход если операция уже отменена
-        if (cancellable.is_cancelled()) return null;
-
-        // Получаем из идентификатора pageName и section
-        const [pageName, section] = identifier.split('|');
-
-        // Формируем команду для запуска `whatis` 
-        const [success, argv] = GLib.shell_parse_argv(
-            `whatis -l --section='${section}' '${pageName}'`
-        );
-
-        if (!success || argv === null) {
-            console.error('SearchEngine: getDescription> Failed to parse command');
-            return null;
-        };
-
-        console.debug(`SearchEngine: getDescription> Spawn subprocess: ${argv.join(' ')}`);
-
-        // Запускаем подпроцесс `whatis` с перехватом stdout и stderr
-        const whatis = Gio.Subprocess.new(
-            argv,
-            Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
-        );
-
-        try {
-
-            // Ожидаем завершения `whatis` с возможностью отмены
-            await whatis.wait_async(cancellable);
-
-            // Получаем вывод процесса
-            const [stdout, stderr] = await whatis.communicate_utf8_async(null, cancellable);
-
-            // Логируем ошибки `whatis` если есть (для отладки)
-            if (stderr || stderr.trim() !== '') {
-                console.error(`SearchEngine: getDescription> Whatis error message: ${stderr}`);
-            }
-
-            // парсим вывод и получаем описание
-            const match = stdout.match(/^([^\s]+)\s*\(([^)]+)\)\s*-\s*(.+)/);
-
-            console.debug(`SearchEngine: getDescription> match`, match);
-
-            const description = (match) ? (match[3]?.trim() ?? null) : null;
-
-            // еще раз проверяем
-            if (cancellable.is_cancelled()) {
-                return null;
+                // Extract and trim captured groups (skip full match at index 0)
+                const [, pageName, section, description] = match;
+                results.push([pageName.trim(), section.trim(), description.trim()]);
             }
             else {
-                // формируем результат как [ `pageName (section)`, `description` ]
-                return [`${pageName} (${section})`, description ?? 'No description for this page'];
+                // Log unparseable lines for debugging (should be rare with standard man pages)
+                console.warn(`SearchEngine: parseOutput> Could not parse line: "${line}"`);
             }
 
-        } catch (error) {
-
-            /* Обработка ошибок поиска и прерывания */
-
-            if (error instanceof Gio.IOErrorEnum && error.code === Gio.IOErrorEnum.CANCELLED) {
-
-                // Если Gio.IOErrorEnum.CANCELLED - значит Shell принудительно остановил создание элементов поиска.
-                // Нужно остановить процесс и вернуть null
-                console.debug('SearchEngine: getDescription> Process cancelled by Shell');
-
-                whatis.force_exit();
-                // Принудительно завершаем `whatis`
-                // force_exit() безопасна на Unix - можно вызывать многократно без ошибок
-
-                console.debug('SearchEngine: getDescription> Subprocess force terminated');
+            // Check for cancellation during processing
+            if (cancellable?.is_cancelled()) {
+                console.debug('SearchEngine: parseOutput> Parsing cancelled');
+                throw new CancelledError();
             }
-            else {
-                console.error('SearchEngine: getDescription> Unexpected error:', error);
-            }
-
-            // При любой ошибке возвращаем null
-            return null;
         }
-    }
 
+        console.debug(`SearchEngine: parseOutput> Parsed ${results.length} line(s)`);
+        return results;
+    }
 
 }
+
+
+// - - - - -
+/** Debugging and Prototyping Block
+ * 
+ * This section is a sandbox for rapidly debugging, prototyping, and manually 
+ * verifying the core logic of the `SearchEngine` class outside of the main 
+ * GNOME Shell environment.
+ * 
+ * Since the `SearchEngine` class does not rely on the Shell API and is designed 
+ * as a standalone module, it can be tested independently, outside of the 
+ * GNOME Shell environment.
+ * 
+ * It executes **only when** this module is running directly.
+ * 
+ * Key Features and Purpose:
+ *
+ * - Self-Contained Execution: It allows the `SearchEngine` module to be run 
+ *   using
+ *   
+ *   ~~~sh
+ *   gjs -m ./dist/SearchEngine.js
+ *   ~~~
+ *   
+ *   for quick iteration without needing the GNOME Shell extension environment.
+ * 
+ * - Manual Verification: It may contain basic assertions (console.assert) to 
+ *   verify critical internal methods.
+ * 
+ * - No Test Framework: It provides a lightweight, quick-check mechanism, 
+ *   intentionally not a replacement for a formal test suite like Gjs-Jasmine, 
+ *   which should be used for comprehensive, automated testing.
+ * 
+ * - Prototyping: It's a convenient place to test complex logic, error handling, 
+ *   and other behavior. 
+ * 
+ * - GLib MainLoop: The use of `GLib.MainLoop` ensures that asynchronous 
+ *   operations (like `Gio.Subprocess`) have a run context to complete before 
+ *   the program exits.
+ * 
+ * Usage:
+ * 
+ * Rebuild and run:
+ * 
+ * ~~~sh
+ * npm run build && gjs -m ./dist/SearchEngine.js
+ * ~~~
+ * 
+ * Run with debug output:
+ * 
+ * ~~~sh
+ * run build && /usr/bin/env -S G_MESSAGES_DEBUG=Gjs-Console gjs -m ./dist/SearchEngine.js
+ * ~~~
+ * 
+ * */
+// /* Uncomment if you want to use
+(async function test_block() {
+    const System = imports.system;
+    if (import.meta.url.split('/').pop() !== System.programInvocationName.split('/').pop()) {
+        console.warn(`Module ${import.meta.url} contains a sandbox block!`);
+    }
+    else {
+
+        // === Sandbox Block Boundary ===
+
+        function arraysEqual<T>(a: T[], b: T[]): boolean {
+            return a.length === b.length &&
+                JSON.stringify(a) === JSON.stringify(b);
+        }
+
+        async function main() {
+
+            console.log('\n\n\n=== Sandbox Start ===\n\n');
+
+            const searchEngine = new SearchEngine();
+
+            // проверяем что `parseOutput` даст одинаковый результат как ... так и
+            if ('parseOutput' in searchEngine && typeof searchEngine['parseOutput'] === 'function') {
+
+                console.assert(
+                    arraysEqual(
+                        searchEngine['parseOutput']('ls (1) - list directory contents')[0],
+                        ["ls", "1", "list directory contents"]),
+                    'nooooooooooooooooo'
+                );
+
+                // должен правильно работать как с \n так и с \0
+                const testLines1 = "" +
+                    "aaa (1)   - ccc\n" +
+                    "bbb (2)   - xxx\n";
+
+                const testLines2 = "" +
+                    "aaa (1)   - ccc\0" +
+                    "bbb (2)   - xxx\0";
+
+                console.assert(
+                    arraysEqual(
+                        searchEngine['parseOutput'](testLines1),
+                        searchEngine['parseOutput'](testLines2)
+                    ),
+                    'noooooooooooooooooooo2'
+                );
+
+                console.log(
+
+                    searchEngine['parseOutput'](testLines1),
+                    searchEngine['parseOutput'](testLines2)
+                );
+
+            }
+
+            console.log('--- ---');
+
+            if ('getPageInfo' in searchEngine && typeof searchEngine['getPageInfo'] === 'function') {
+
+                console.assert(await searchEngine['getPageInfo']('1|printf') !== null, 'naht!!!!');
+                console.assert(await searchEngine['getPageInfo']('225|pupa') === null, 'nayn! nayn! nayn!'); // оказалось достаточно трудным найти не существующую команду
+            }
+
+            console.log('--- ---');
+
+
+            // Test Т: Cancellation during a long-running subprocess
+            // This is critical for a responsive GNOME Shell search provider. This test 
+            // verifies that cancellation stops the external command and prevents errors.
+            if ('runSubprocess' in searchEngine && typeof searchEngine['runSubprocess'] === 'function') {
+
+                const cancellable = new Gio.Cancellable();
+                const command = "apropos --and '..'"; // это найдет все страницы, что может занять время
+
+                console.log('Test 1: Testing cancellation of long-running process...');
+
+                // Schedule the cancellation to happen almost immediately
+                GLib.timeout_add(GLib.PRIORITY_DEFAULT, 30, () => {
+                    cancellable.cancel();
+                    return GLib.SOURCE_REMOVE;
+                });
+
+                const result1 = await searchEngine['runSubprocess'](command, cancellable);
+
+                // Should return null (the error handling branch) due to cancellation
+                console.assert(result1 === null, 'Test 1 Failed: runSubprocess did not return null after cancellation.');
+                console.log(`Test 1 Result: ${result1 === null ? 'Passed' : 'Failed'}. (Expected: null)`);
+
+                // если не прерывать - та же команда найдет много результатов
+                const result2 = await searchEngine['runSubprocess'](command);
+                console.assert((result2?.length ?? 0) > 0, '....');
+                console.log(`Test 1 Result: ...`);
+
+                // можешь проверить в терминале что не осталось высящих процессов:
+                // 〉pgrep apropos | wc -l
+
+            }
+
+
+            // Test T: searchManPages with empty terms
+            // Input/Output Edge Case (Empty Terms)
+            // Ensure searchManPages gracefully handles no input terms, which should result 
+            // in an empty array and avoid running an unnecessary, potentially broad command
+            //  like "apropos --and"
+            // Но, это невероятная ситуация для поискового провайдера в GNOME Shell.
+            if ('searchManPages' in searchEngine && typeof searchEngine['searchManPages'] === 'function') {
+                console.log('Test 2: Testing searchManPages with empty terms...');
+                const emptyResult = await searchEngine['searchManPages']([]);
+
+                // выполнит команду, но парсер не сможет парсить ответ
+                console.assert(arraysEqual(emptyResult, []), 'Test 2 Failed: searchManPages with [] did not return [].');
+                console.log(`Test 2 Result: ${arraysEqual(emptyResult, []) ? 'Passed' : 'Failed'}. (Expected: [])`);
+            }
+
+
+            // Test 3: getPageInfo for a specific page (e.g., 'bash')
+            // Specific getPageInfo Retrieval(Data Integrity)
+            // Verify that a specific, known page is retrieved correctly with its full, 
+            // untruncated description.
+            if ('getPageInfo' in searchEngine && typeof searchEngine['getPageInfo'] === 'function') {
+                console.log('Test 3: Testing getPageInfo for a known page (1|bash)...');
+
+                const bashInfo = await searchEngine['getPageInfo']('1|bash');
+
+                // Check for correct format and non-empty description
+                const isCorrect = bashInfo !== null && bashInfo[0] === 'bash (1)' && bashInfo[1].length > 10;
+
+                console.assert(isCorrect, 'Test 3 Failed: getPageInfo for 1|bash returned unexpected data or format.');
+                console.log(`Test 3 Result: ${isCorrect ? 'Passed' : 'Failed'}. (Title: ${bashInfo ? bashInfo[0] : 'null'})`);
+            }
+
+
+        }
+
+        // === Sandbox Block Boundary ===
+
+
+        main()
+            .catch((error) => {
+                console.error('Sandbox Main Function Unexpected Error:', error);
+            })
+            .finally(() => {
+                console.log('\n\n\nSandbox: C-c to exit');
+            });
+
+        await new GLib.MainLoop(null, false).runAsync();
+
+    }
+})()
+    .catch(error => {
+        console.error('Sandbox Unexpected Error:', error);
+    });
+// */
