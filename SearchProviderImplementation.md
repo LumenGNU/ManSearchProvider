@@ -146,9 +146,9 @@ import type {
 >> **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L40)
 
 
-> ## Методы
->
->
+## Методы
+
+
 >> ### `getInitialResultSet()`
 >>
 >> ~~~typescript
