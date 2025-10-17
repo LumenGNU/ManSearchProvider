@@ -1,16 +1,18 @@
-# Man Search Provider for GNOME Shell
+# Man Search Provider - Example for GNOME Shell Search Providers
 
+[![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/)
 ![GNOME Shell](https://img.shields.io/badge/GNOME%20Shell-45--48-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue)
 
-**THIS IS AN EXAMPLE ONLY**
+- **This is a example/template implementation** for developers who want to create their own GNOME Shell search providers. Not intended for end-user installation.
+- **Tech Stack:** TypeScript, GNOME Shell Extensions API
 
-**Tech Stack:** TypeScript, GNOME Shell Extensions API
-
-A search provider for quick access to man pages directly from the GNOME Shell overview.
+This fully functional extension demonstrates how to implement a GNOME Shell search provider. While it works and can be installed, it's designed primarily as an example implementation for developers creating their own search providers.
 
 
 ## How It Works
+
+A search provider for quick access to man pages directly from the GNOME Shell overview.
 
 1. Open the overview (Super/Windows key)
 2. Start typing a command, e.g., `grep`, `vim`, `git`, `git clone` etc.
@@ -37,12 +39,14 @@ Simply start typing in the overview. The provider activates automatically for an
 
 This code is designed as an example implementation of a search provider through a GNOME Shell extension and is not intended for end-user consumption.
 
-This project is written in **TypeScript** and should only be used as an example or "template" for implementing your own **search provider**.
-
-See the information below for how to install and start development.
+**For developers:** See the Development section below for setup instructions.
 
 
 # Development
+
+This project is written in **TypeScript** and should only be used as an example or "template" for implementing your own **search provider**.
+
+See the information below for how to install and start development.
 
 See [Search Provider Implementation](SearchProviderImplementation.md) for code description and explanation of the extension structure.
 
