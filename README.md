@@ -14,8 +14,8 @@ A search provider for quick access to man pages directly from the GNOME Shell ov
 
 1. Open the overview (Super/Windows key)
 2. Start typing a command, e.g., `grep`, `vim`, `git`, `git clone` etc.
-3. See results from man pages
-4. Click on a result → opens the man page in terminal
+3. See search results from all installed man pages
+4. Click on a result to open the man page in the terminal
 
 
 ## Usage
@@ -27,7 +27,7 @@ Simply start typing in the overview. The provider activates automatically for an
 
 ## Implementation Features
 
-- Uses `man -k` (apropos) for searching
+- Uses `apropos --and` for searching
 - Displays command name, section, and description
 - Opens man page in terminal on click
 - Minimum query length: 2 characters
@@ -48,6 +48,7 @@ See [Search Provider Implementation](SearchProviderImplementation.md) for code d
 
 **Note**: This guide covers basic development workflow only. It does not include complete instructions for packaging and publishing your extension. For comprehensive documentation on these topics, refer to the relevant sections at https://gjs.guide/extensions/
 
+
 ## Requirements
 
 - GNOME Shell version 45-48 (for version 49+ see note below)
@@ -56,7 +57,7 @@ See [Search Provider Implementation](SearchProviderImplementation.md) for code d
 
 required only for this example:
 
-- `man` in the system
+- `man-db` in the system
 - `org.gnome.Terminal` aka `gnome-terminal`
 
 
@@ -64,12 +65,12 @@ required only for this example:
 
 This is an example extension for **GNOME Shell 45-48**.
 
-**Note for GNOME Shell 49+:**  
-The extension itself may work in GNOME Shell 49+, but the development workflow described below won't work because X11 is disabled by default. [To debug extensions in GNOME 49+, use the development kit](https://gjs.guide/extensions/upgrading/gnome-shell-49.html#debugging):
+> **Note for GNOME Shell 49+:**  
+> The extension itself may work in GNOME Shell 49+, but the development workflow described below won't work because X11 is disabled by default. [To debug extensions in GNOME 49+, use the development kit](https://gjs.guide/extensions/upgrading/gnome-shell-49.html#debugging):
 
-```sh
+~~~sh
 dbus-run-session -- gnome-shell --devkit
-```
+~~~
 
 ## Development Documentation
 
@@ -84,24 +85,24 @@ See:
 
 1. Clone and install dependencies:
 
-```sh
+~~~sh
 git clone https://github.com/LumenGNU/ManSearchProvider.git
 cd ManSearchProvider
 npm install
-```
+~~~
 
 2. Build and install the extension:
 
-```sh
+~~~sh
 npm run build    # TypeScript → JavaScript in ./dist
 npm run setup    # Copies to ~/.local/share/gnome-shell/extensions/
-```
+~~~
 
 3. Start nested GNOME Shell for testing and debugging:
 
-```sh
+~~~sh
 npm run debug  # Opens terminal with debug output and nested shell
-```
+~~~
 
 4. Enable the extension inside nested shell (**IMPORTANT**):
 
@@ -112,9 +113,9 @@ npm run debug  # Opens terminal with debug output and nested shell
    or
 
    - **Inside the running nested shell**, open terminal and execute:
-     ```sh
+     ~~~sh
      gnome-extensions enable "man-search-provider@example.github.com"
-     ```
+     ~~~
 
 5. Debugging
 
@@ -127,13 +128,13 @@ npm run debug  # Opens terminal with debug output and nested shell
 
 ### Main Commands
 
-```sh
-npm run build   # Compile TypeScript to dist/
+~~~sh
+npm run build   # Compile TypeScript to ./dist
 npm run setup   # Install extension to system
 npm run debug   # Start nested GNOME Shell (opens terminal with debug output)
 npm run dev     # Alias for `npm run build && npm run setup && npm run debug`
-npm run clear   # Clear dist/ and remove installed extension
-```
+npm run clear   # Clear ./dist and remove installed extension
+~~~
 
 > **Note**:
 >
@@ -142,7 +143,7 @@ npm run clear   # Clear dist/ and remove installed extension
 
 ### Typical Workflow
 
-```sh
+~~~sh
 # 1. Changed code
 # 2. Build, install and run in nested shell:
 npm run build && npm run setup && npm run debug
@@ -158,7 +159,7 @@ npm run debug
 
 # 6. Clear system:
 npm run clear
-```
+~~~
 
 
 
@@ -196,7 +197,7 @@ When using separate commands, it's easy to:
 
 Settings in `package.json` section `config`:
 
-```jsonc
+~~~jsonc
 "config": {
   "ID": "man-search-provider@example.github.com",            // Extension UUID
   "DIST_DIR": "./dist",                                      // Build directory
@@ -206,7 +207,7 @@ Settings in `package.json` section `config`:
   "LANG": "C",                                               // Useful for testing translations, e.g., de_DE.UTF-8, fr_FR.UTF-8
   "WIN_SIZE": "1280x720"                                     // Window size for view nested shell
 }
-```
+~~~
 
 
 ### For Your Extension, Change

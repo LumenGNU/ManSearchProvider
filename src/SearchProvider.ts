@@ -71,7 +71,7 @@ export class SearchProvider extends SearchEngine implements SearchProvider2 {
      * @returns список идентификаторов результатов */
     async getInitialResultSet(terms: string[], cancellable: Gio.Cancellable): Promise<string[]> {
 
-        console.debug(`\nSearchProvider: getInitialResultSet(terms: ${JSON.stringify(terms, null, 2)}), cancellable: ${cancellable.constructor.name}`);
+        // console.debug(`\nSearchProvider: getInitialResultSet(terms: ${JSON.stringify(terms, null, 2)}), cancellable: ${cancellable.constructor.name}`);
 
         // документация говорит что промис нужно отклонять при срабатывании прерывателя, но, 
         // по видимому, шел не обрабатывает такую ситуацию  https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/search.js?ref_type=heads#L702
