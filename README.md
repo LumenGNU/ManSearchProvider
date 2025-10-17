@@ -67,10 +67,9 @@ This is an example extension for **GNOME Shell 45-48**.
 
 > **Note for GNOME Shell 49+:**  
 > The extension itself may work in GNOME Shell 49+, but the development workflow described below won't work because X11 is disabled by default. [To debug extensions in GNOME 49+, use the development kit](https://gjs.guide/extensions/upgrading/gnome-shell-49.html#debugging):
-
-~~~sh
-dbus-run-session -- gnome-shell --devkit
-~~~
+> ~~~sh
+> dbus-run-session -- gnome-shell --devkit
+> ~~~
 
 ## Development Documentation
 
