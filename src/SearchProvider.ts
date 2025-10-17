@@ -148,6 +148,7 @@ export class SearchProvider extends SearchEngine implements SearchProvider2 {
 
         if (identifiers.length <= ourMax) return identifiers;
 
+
         return identifiers.slice(0, ourMax);
     }
 
@@ -195,12 +196,17 @@ export class SearchProvider extends SearchEngine implements SearchProvider2 {
                 name: name,
                 description: description,
 
-                // Иконку можно заимствовать у терминала
+                // Иконку можно заимствовать у приложения
                 // createIcon: (size) => Shell.AppSystem.get_default().lookup_app('org.gnome.Terminal.desktop').create_icon_texture(size),
                 // или,
                 // если указываем кастомную иконку нужно учесть scaleFactor для ее размера
                 createIcon: (size) => {
                     return new St.Icon({
+                        // системная или
+                        // Custom Icon
+                        // gicon: new Gio.FileIcon({
+                        //   file: Gio.File.new_for_path(`${path}/may_awesome_icon.svg`),
+                        // }),
                         icon_name: 'system-help',
                         width: size * scaleFactor,
                         height: size * scaleFactor,

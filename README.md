@@ -4,7 +4,7 @@
 ![GNOME Shell](https://img.shields.io/badge/GNOME%20Shell-45--48-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue)
 
-- **This is a example/template implementation** for developers who want to create their own GNOME Shell search providers. Not intended for end-user installation.
+- **This is an example/template implementation** for developers who want to create their own GNOME Shell search providers. Not intended for end-user installation.
 - **Tech Stack:** TypeScript, GNOME Shell Extensions API
 
 This fully functional extension demonstrates how to implement a GNOME Shell search provider. While it works and can be installed, it's designed primarily as an example implementation for developers creating their own search providers.
