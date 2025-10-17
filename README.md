@@ -46,7 +46,7 @@ See [Search Provider Implementation](SearchProviderImplementation.md) for code d
 
 # Development
 
-**Note**: This guide covers basic development workflow only. It does not include complete instructions for packaging and publishing your extension. For comprehensive documentation on these topics, refer to the relevant sections at https://gjs.guide/extensions/
+**Note**: This guide covers basic development workflow only. It does not include complete instructions for packaging and publishing your extension. For comprehensive documentation on these topics, refer to the relevant sections at [GJS Guide](https://gjs.guide/extensions/)
 
 
 ## Requirements
@@ -84,11 +84,11 @@ See:
 
 1. Clone and install dependencies:
 
-~~~sh
-git clone https://github.com/LumenGNU/ManSearchProvider.git
-cd ManSearchProvider
-npm install
-~~~
+   ~~~sh
+   git clone https://github.com/LumenGNU/ManSearchProvider.git
+   cd ManSearchProvider
+   npm install
+   ~~~
 
 2. Build and install the extension:
 
@@ -135,9 +135,11 @@ npm run dev     # Alias for `npm run build && npm run setup && npm run debug`
 npm run clear   # Clear ./dist and remove installed extension
 ~~~
 
-> **Note**:
->
+> **Note:**  
 > `npm run debug` is an alias for `npm run nested-shell:restart`. See `package.json` for a complete list of commands.
+
+> **Tip:**  
+> Double-tap Tab for command completion to quickly browse available commands (e.g., `npm run <Tab><Tab>`)
 
 
 ### Typical Workflow
@@ -161,11 +163,8 @@ npm run clear
 ~~~
 
 
-
-
 ### Common Mistakes
 
-When using separate commands, it's easy to:
 - Forget to recompile after code changes
 - Forget to reinstall after build
 - Forget to restart shell after installation
@@ -182,14 +181,18 @@ When using separate commands, it's easy to:
 - Opens nested shell in a separate window
 - Opens terminal window with log and debug output
 - Safe for testing (doesn't crash your main desktop)
+- Interaction with nested shell may be significantly slower
+
+Control nested shell:
+
 - Run: `npm run nested-shell:start`
 - Stop and run (restart): `npm run nested-shell:restart`
 - Stop: `npm run nested-shell:stop` or close the terminal window
-- Interaction with nested shell may be significantly slower
 
 ⚠️ [**This is designed for GNOME Shell 45-48 and won't work in GNOME Shell 49+.**](https://gjs.guide/extensions/upgrading/gnome-shell-49.html#debugging)
 
-**Alternative**: Instead of using nested shell, you can log out and log back in to test the extension in your actual GNOME session. This is more stable but less convenient for rapid development and doesn't provide real-time debug output.
+> **Alternative:**  
+> Instead of using nested shell, you can log out and log back in to test the extension in your actual GNOME session. This is more stable but less convenient for rapid development and doesn't provide real-time debug output.
 
 
 ## Build and Debug Configuration
