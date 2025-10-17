@@ -91,17 +91,17 @@ See:
    ~~~
 
 2. Build and install the extension:
-
-~~~sh
-npm run build    # TypeScript → JavaScript in ./dist
-npm run setup    # Copies to ~/.local/share/gnome-shell/extensions/
-~~~
+   
+   ~~~sh
+   npm run build    # TypeScript → JavaScript in ./dist
+   npm run setup    # Copies to ~/.local/share/gnome-shell/extensions/
+   ~~~
 
 3. Start nested GNOME Shell for testing and debugging:
-
-~~~sh
-npm run debug  # Opens terminal with debug output and nested shell
-~~~
+   
+   ~~~sh
+   npm run debug  # Opens terminal with debug output and nested shell
+   ~~~
 
 4. Enable the extension inside nested shell (**IMPORTANT**):
 
@@ -112,6 +112,7 @@ npm run debug  # Opens terminal with debug output and nested shell
    or
 
    - **Inside the running nested shell**, open terminal and execute:
+    
      ~~~sh
      gnome-extensions enable "man-search-provider@example.github.com"
      ~~~
