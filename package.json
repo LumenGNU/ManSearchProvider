@@ -11,8 +11,9 @@
     "TERMINAL": "gnome-terminal",
     "TERMINAL_PARAM": "--",
     "LANG": "C",
-    "WIN_SIZE": "800x720",
-    "_WIN_SIZE": "1280x720"
+    "WIN_SIZE": "640x480",
+    "_WIN_SIZE": "800x720",
+    "__WIN_SIZE": "1280x720"
   },
   "scripts": {
     "build": "npm run project:build-dist",
@@ -34,7 +35,7 @@
   },
   "devDependencies": {
     "typescript": "^5.9.3",
-    "@girs/gnome-shell": "^49.0.2",
+    "@girs/gnome-shell": "^49.0.3",
     "@girs/gjs": "^4.0.0-beta.38",
     "@girs/st-17": "^17.0.0-4.0.0-beta.38"
   }

@@ -5,19 +5,14 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import Shell from "gi://Shell";
 
-// @todo
-import {
-    ResultMeta,
-    SearchProvider2
-} from './SearchProvider2.js';
-
 import {
     SearchEngine
 } from './SearchEngine.js';
 
+import type { SearchProvider2Interface, ResultMetaInterface } from './SearchProvider2Interface.js';
 
 
-export class SearchProvider extends SearchEngine implements SearchProvider2 {
+export class SearchProvider extends SearchEngine implements SearchProvider2Interface {
 
     private extensionId;
 
@@ -164,7 +159,7 @@ export class SearchProvider extends SearchEngine implements SearchProvider2 {
      * @param results идентификаторы результатов
      * @param cancellable отменяемое действие для операции
      * @returns массив объектов метаданных результата */
-    async getResultMetas(identifiers: any[], cancellable: Gio.Cancellable): Promise<ResultMeta[]> {
+    async getResultMetas(identifiers: any[], cancellable: Gio.Cancellable): Promise<ResultMetaInterface[]> {
 
         // console.debug(`\nSearchProvider: getResultMetas(results: ${JSON.stringify(results, null, 2)}, cancellable: ${cancellable.constructor.name})`);
 
@@ -175,7 +170,7 @@ export class SearchProvider extends SearchEngine implements SearchProvider2 {
             return [];
         }
 
-        const resultMetas = [] as ResultMeta[];
+        const resultMetas = [] as ResultMetaInterface[];
 
         for (const identifier of identifiers) {
 
@@ -191,7 +186,7 @@ export class SearchProvider extends SearchEngine implements SearchProvider2 {
             const [name, description] = result;
 
             // Создаем и заполняем объект `ResultMeta` для каждого результата
-            const meta: ResultMeta = {
+            const meta: ResultMetaInterface = {
                 id: identifier,
                 name: name,
                 description: description,
@@ -232,7 +227,7 @@ export class SearchProvider extends SearchEngine implements SearchProvider2 {
      *
      * @param resultMeta объект метаданных результата
      * @returns Актер для результата, или null -  */
-    createResultObject(_resultMeta: ResultMeta): Clutter.Actor | null {
+    createResultObject(_resultMeta: ResultMetaInterface): Clutter.Actor | null {
         // console.debug(`SearchProvider: createResultObject(meta: ${JSON.stringify(resultMeta, null, 2)})`);
         // return new St.Icon({ icon_name: 'dialog-information-symbolic' });
         return null;

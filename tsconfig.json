@@ -2,7 +2,6 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "skipLibCheck": true,
     "outDir": "./dist",
     "sourceMap": false,
     "strict": true,
