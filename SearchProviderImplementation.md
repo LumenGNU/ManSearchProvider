@@ -353,7 +353,7 @@ launchSearch(terms: string[]): void
 id: string
 ~~~
 
-Уникальный идентификатор результата.
+Уникальный идентификатор результата. Должен быть уникальным среди всех текущих результатов поиска. Должен однозначно идентифицировать результат.
 
 
 ### `name`
@@ -441,6 +441,7 @@ ExampleExtension
 > **NOTE**: Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Например, в простых случаях, сам класс расширения может реализовать интерфейс `SearchProvider2`:
 >
 > ~~~typescript
+> // Класс-расширение самостоятельно реализующий SearchProvider2 интерфейс
 > export default class SearchProviderExtension extends Extension implements SearchProvider2 {
 > 
 >     private declare searchProvider: SearchProvider;
@@ -480,9 +481,9 @@ ExampleExtension
 
 **Ответственности**:
 
-- Запуск системных команд apropos и whatis
+- Запуск системных команд `apropos` и `whatis`
 - Парсинг вывода команд
-- Предоставление данных для создания мета-объектов (заголовок и описание страницы)
+- Предоставление данных (заголовок и описание страницы) для создания ResultMeta-объекта
 
 **Ключевые методы**:
 
@@ -490,31 +491,36 @@ ExampleExtension
 class SearchEngine {
 
     // Основной поиск по всей базе man-страниц.
-    // Формируем команду `apropos` с поиском по всем терминам переданным в `terms`
-    // Парсит (`parseAproposOutput`) и возвращаем результат как массив
-    // идентификаторов в формате `command|section`.
-    // Поддерживает отмену поиска.
-    protected async searchManPages(terms: string[], cancellable: Gio.Cancellable): Promise<string[]>
+    // Формируем команду `apropos` с поиском по всем терминам переданным в `terms`.
+    // Парсит, и возвращаем результат как массив идентификаторов в формате 
+    // `section|command`.
+    // Поддерживает отмену.
+    protected async searchManPages(                            // L103
+        terms: string[], 
+        cancellable: Gio.Cancellable
+    ): Promise<string[]>
     
     // Получение метаданных (заголовок и описание) о конкретной странице.
     // Формируем команду `whatis` для конкретной страницы и парсит результат.
-    // Возвращает кортеж [title, description] для указанного идентификатора, или
-    // `null` при отмене или ошибке.
-    // Поддерживает отмену процесса.
-    protected async getPageInfo(identifier: string, cancellable: Gio.Cancellable): Promise<[title: string, description: string] | null>
+    // Возвращает кортеж [title, description] для указанного идентификатора.
+    // Поддерживает отмену.
+    protected async getPageInfo(                               // L172
+        identifier: string, 
+        cancellable: Gio.Cancellable
+    ): Promise<[title: string, description: string] | null>
     
-    // Парсинг вывода apropos.
-    // Используется в `searchManPages` для формирования массива идентификаторов
-    // из результатов поиска apropos.
-    private parseAproposOutput(output: string, cancellable: Gio.Cancellable): string[]
+    // Parses output from 'whatis' or 'apropos' commands into structured data.
+    // Поддерживает отмену.
+    private parseOutput(                                       // L313
+        output: string, 
+        cancellable: Gio.Cancellable
+    ): string[]
 }
 ~~~
 
-> **Формат идентификаторов**: В данном примере используется формат `command|section` 
-(например, `printf|1`, `printf|3`), позволяющий однозначно идентифицировать 
-man-страницу и её раздел.
+> **Заметка разработчику**: **Формат идентификаторов**: В данной реализации, как строковые идентификаторы, позволяющие однозначно идентифицировать man-страницу используется формат `section|command`. Например: `1|printf`, `3|printf`.
 
-**Замечание**: Класс не зависит от GNOME Shell API и работает напрямую с системой.
+> **Заметка разработчику**: Класс не зависит от GNOME Shell API и работает напрямую с системой.
 
 
 ## Класс SearchProvider

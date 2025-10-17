@@ -305,12 +305,12 @@ export class SearchEngine {
      * See:
      * - {@link ManPageMetaInfo ManPageMetaInfo Type}
      * 
-     * @param stdout - Raw output string from the command
+     * @param output - Raw output string from the command
      * @param cancellable - Optional `Gio.Cancellable` for cooperative cancellation
      * @returns Array of tuples containing `[pageName, section, description]`.
      * 
      * @throws {CancelledError} If operation is cancelled via cancellable */
-    private parseOutput(stdout: string, cancellable?: Gio.Cancellable | null): ManPageMetaInfo[] {
+    private parseOutput(output: string, cancellable?: Gio.Cancellable | null): ManPageMetaInfo[] {
 
         // console.debug('\n' +
         //     `SearchEngine: parseOutput(stdout: '\n${stdout}\n', ` +
@@ -328,7 +328,7 @@ export class SearchEngine {
         ][] = [];
 
         // Split by newlines or null chars, filter out empty lines
-        const lines = stdout.trim().split(/[\n\0]/).filter(line => line.trim());
+        const lines = output.trim().split(/[\n\0]/).filter(line => line.trim());
 
         for (const line of lines) {
 
