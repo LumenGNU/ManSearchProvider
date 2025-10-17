@@ -39,11 +39,6 @@
 - Базовое знакомство с библиотекой GIO
 
 
-# Структура документа
-
-TODO
-
-
 # Основные концепции
 
 Поставщик поиска — это компонент, который:
@@ -345,15 +340,15 @@ launchSearch(terms: string[]): void
 
 
 > ## Свойства
-> 
-> 
+>
+>
 > > ### `id`
 > > 
 > > ~~~typescript
 > > id: string
 > > ~~~
 > > 
-> > Уникальный идентификатор результата. Должен быть уникальным среди всех текущих результатов поиска. Должен однозначно идентифицировать результат.
+> > Уникальный идентификатор результата. Должен быть уникальным среди всех текущих результатов поиска, и однозначно идентифицировать результат.
 > 
 > 
 > > ### `name`
@@ -521,8 +516,8 @@ class SearchEngine {
 > **Заметка разработчику**:
 >
 > **Формат идентификаторов**: В данной реализации, как строковые идентификаторы, позволяющие однозначно идентифицировать man-страницу используется формат `section|command`. Например: `1|printf`, `3|printf`.
-
-> **Заметка разработчику**: Класс не зависит от GNOME Shell API и работает напрямую с системой. Поэтому его можно отладить и протестировать самостоятельно, вне среды GNOME Shell. Для демострации этого смотри "Debugging and Prototyping Block".
+>
+> **Отладка и прототипирование**: Класс не зависит от GNOME Shell API и работает напрямую с системой. Поэтому его можно отладить и протестировать самостоятельно, вне среды GNOME Shell. Для демонстрации этого смотри "Debugging and Prototyping Block".
 
 > **Заметка разработчику**: Локаль и nested shell TODO
 
@@ -548,7 +543,7 @@ class SearchEngine {
 - Реализация интерфейса `SearchProvider2`
 - Делегация в `SearchEngine` поисковых запросов
 
-**Наследование и ключевые моменты**:
+**Наследование и ключевые моменты реализации**:
 
 ~~~typescript
 // Расширяет `SearchEngine` и реализует `SearchProvider2` интерфейс
@@ -568,7 +563,7 @@ class SearchProvider extends SearchEngine implements SearchProvider2 {
     // --- Методы SearchProvider2 ---
 
     // Запускает поиск если первый поисковый термин имеет длину хотя бы 2 символа.
-    // Делегирует поиск в `searchManPages`.
+    // Делегирует поиск в `SearchEngine::searchManPages`.
     async getInitialResultSet(terms: string[], cancellable: Gio.Cancellable): Promise<string[]>
 
     // Запускает новый поиск с новым `terms`.
@@ -578,7 +573,7 @@ class SearchProvider extends SearchEngine implements SearchProvider2 {
     filterResults(identifiers: string[], _maxResults: number): string[]
 
     // Формирует метаданные результата.
-    // Получает метаданные через `getPageInfo`.
+    // Получает метаданные через `SearchEngine::getPageInfo`.
     // Создает и заполняет объекты метаданных для результатов.
     async getResultMetas(identifiers: any[], cancellable: Gio.Cancellable): Promise<ResultMeta[]>
 

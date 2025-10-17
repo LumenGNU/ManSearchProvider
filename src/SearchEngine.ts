@@ -409,7 +409,7 @@ export class SearchEngine {
  * Run with debug output:
  * 
  * ~~~sh
- * run build && /usr/bin/env -S G_MESSAGES_DEBUG=Gjs-Console gjs -m ./dist/SearchEngine.js
+ * npm run build && /usr/bin/env -S G_MESSAGES_DEBUG=Gjs-Console gjs -m ./dist/SearchEngine.js
  * ~~~
  * 
  * See:

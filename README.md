@@ -135,7 +135,9 @@ npm run dev     # Alias for `npm run build && npm run setup && npm run debug`
 npm run clear   # Clear dist/ and remove installed extension
 ```
 
-**Note:** `npm run debug` is an alias for `npm run nested-shell:restart`. See `package.json` for a complete list of commands.
+> **Note**:
+>
+> `npm run debug` is an alias for `npm run nested-shell:restart`. See `package.json` for a complete list of commands.
 
 
 ### Typical Workflow
@@ -157,6 +159,8 @@ npm run debug
 # 6. Clear system:
 npm run clear
 ```
+
+
 
 
 ### Common Mistakes
@@ -199,7 +203,8 @@ Settings in `package.json` section `config`:
   "EXTENSION_DIR": "~/.local/share/gnome-shell/extensions",  // Installation path
   "TERMINAL": "gnome-terminal",                              // Terminal for debug logs
   "TERMINAL_PARAM": "--",                                    // Terminal parameter for running commands
-  "LANG": "C"                                                // Useful for testing translations, e.g., de_DE.UTF-8, fr_FR.UTF-8
+  "LANG": "C",                                               // Useful for testing translations, e.g., de_DE.UTF-8, fr_FR.UTF-8
+  "WIN_SIZE": "1280x720"                                     // Window size for view nested shell
 }
 ```
 
