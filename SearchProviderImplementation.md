@@ -495,7 +495,7 @@ class SearchEngine {
     // Парсит, и возвращаем результат как массив идентификаторов в формате 
     // `section|command`.
     // Поддерживает отмену.
-    protected async searchManPages(                            // L103
+    protected async searchManPages(
         terms: string[], 
         cancellable: Gio.Cancellable
     ): Promise<string[]>
@@ -504,14 +504,14 @@ class SearchEngine {
     // Формируем команду `whatis` для конкретной страницы и парсит результат.
     // Возвращает кортеж [title, description] для указанного идентификатора.
     // Поддерживает отмену.
-    protected async getPageInfo(                               // L172
+    protected async getPageInfo(
         identifier: string, 
         cancellable: Gio.Cancellable
     ): Promise<[title: string, description: string] | null>
     
     // Parses output from 'whatis' or 'apropos' commands into structured data.
     // Поддерживает отмену.
-    private parseOutput(                                       // L313
+    private parseOutput(
         output: string, 
         cancellable: Gio.Cancellable
     ): string[]
@@ -520,7 +520,17 @@ class SearchEngine {
 
 > **Заметка разработчику**: **Формат идентификаторов**: В данной реализации, как строковые идентификаторы, позволяющие однозначно идентифицировать man-страницу используется формат `section|command`. Например: `1|printf`, `3|printf`.
 
-> **Заметка разработчику**: Класс не зависит от GNOME Shell API и работает напрямую с системой.
+> **Заметка разработчику**: Класс не зависит от GNOME Shell API и работает напрямую с системой. Поэтому его можно отладить и протестировать самостоятельно, вне среды GNOME Shell.
+
+**Навигатор по коду**
+
+- [SearchEngine.ts](src/SearchEngine.ts)
+  - [class `SearchEngine`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L77)
+    - [method `searchManPages`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L103C21-L103C35)
+    - [method `getPageInfo`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L172C21-L172C32)
+    - [method `runSubprocess`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L231C19-L231C32)
+    - [method `parseOutput`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L313C13-L313C24)
+  - [Debugging and Prototyping Block](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L364)
 
 
 ## Класс SearchProvider
