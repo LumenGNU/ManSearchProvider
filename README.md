@@ -22,7 +22,7 @@ A search provider for quick access to man pages directly from the GNOME Shell ov
 
 Simply start typing in the overview. The provider activates automatically for any query of 2 or more characters.
 
-![Screenshot](pics/search_provider.png)
+![Man pages search results displayed in GNOME Shell overview search](pics/search_provider.png)
 
 
 ## Implementation Features
@@ -41,12 +41,13 @@ This project is written in **TypeScript** and should only be used as an example 
 
 See the information below for how to install and start development.
 
-See [Search Provider Implementation](SearchProviderImplementation.md) for code description and explanation of the extension structure.
-
 
 # Development
 
-**Note**: This guide covers basic development workflow only. It does not include complete instructions for packaging and publishing your extension. For comprehensive documentation on these topics, refer to the relevant sections at [GJS Guide](https://gjs.guide/extensions/)
+See [Search Provider Implementation](SearchProviderImplementation.md) for code description and explanation of the extension structure.
+
+> **Note**:  
+> This guide covers basic development workflow only. It does not include complete instructions for packaging and publishing your extension. For comprehensive documentation on these topics, refer to the relevant sections at [GJS Guide](https://gjs.guide/extensions/)
 
 
 ## Requirements
@@ -177,7 +178,7 @@ npm run clear
 
 ## Nested Shell
 
-![Screenshot](screenshot2.png)
+![Nested shell with terminal window showing extension's console.debug output](pics/nested_shell.png)
 
 - Opens nested shell in a separate window
 - Opens terminal window with log and debug output
