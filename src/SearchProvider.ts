@@ -242,15 +242,15 @@ export class SearchProvider extends SearchEngine implements SearchProvider2Inter
      * 
      * https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/search.js?ref_type=heads#L61
      *
-     * @param  result идентификатор результата. (то, что отображается как активированная строка-результат)
+     * @param  identifier идентификатор результата. (то, что отображается как активированная строка-результат)
      * @param  terms поисковые термины. (то, что сейчас в строке поиска) */
-    activateResult(result: string, _terms: string[]): void {
+    activateResult(identifier: string, _terms: string[]): void {
 
         // console.debug(`\nSearchProvider: activateResult(result: ${result}, terms: ${JSON.stringify(terms, null, 2)})`);
 
         // этот метод не обязан что либо делать
 
-        const [name, section, _description] = result.split('|');
+        const [name, section, _description] = identifier.split('|');
 
         // Открываем man-страницу в терминале
         // Используем gnome-terminal для отображения выбранного результата
