@@ -155,7 +155,7 @@ import type {
 
 
 - ### `getInitialResultSet()`
- 
+  ---
   ~~~typescript
   getInitialResultSet(
       terms: string[],
@@ -333,7 +333,7 @@ import type {
  
   **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L248)
 
-  
+
 - ### `launchSearch()`
  
   ~~~typescript
