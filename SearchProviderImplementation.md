@@ -420,19 +420,7 @@ import type {
 
 Пример расширения реализован через три основных класса:
 
-~~~
-  ExampleExtension
-         :
-         : управляет жизненным циклом
-         :
-         v                           <<interface>>
-   SearchProvider ┈┈ реализует ┈┈▷  SearchProvider2Interface
-         |
-         | расширяет
-         |
-         ▽
-    SearchEngine (бизнес-логика поиска)
-~~~
+![Classes Diagram](pics/Classes_Diagram.svg)
 
 Эта архитектура обеспечивает:
 
@@ -469,7 +457,7 @@ import type {
 > export default class SearchProviderExtension extends Extension implements SearchProvider2Interface {
 >
 >     readonly id: string = this.uuid;
->     readonly appInfo: Gio.AppInfo | null = null;
+>     readonly appInfo: Gio.AppInfo;
 >
 >     enable() {
 >         // Регистрирует себя как поставщика поиска
