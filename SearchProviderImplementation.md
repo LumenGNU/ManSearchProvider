@@ -246,10 +246,10 @@ import type {
 > **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L225)
 >
 >
-> ### `getResultMetaInterfaces()`
+> ### `getResultMetas()`
 >
 > ~~~typescript
-> getResultMetaInterfaces(
+> getResultMetas(
 >     identifiers: string[],
 >     cancellable: Gio.Cancellable
 > ): Promise<ResultMetaInterface[]>
@@ -423,7 +423,7 @@ import type {
 ~~~
   ExampleExtension
          :
-         : управляет
+         : управляет жизненным циклом
          :
          v                           <<interface>>
    SearchProvider ┈┈ реализует ┈┈▷  SearchProvider2Interface
@@ -436,184 +436,40 @@ import type {
 
 Эта архитектура обеспечивает:
 
-- Отделение поисковой логики от интеграции с Shell
-- `SearchEngine` можно тестировать независимо вне Shell
+- Отделение поисковой логики от интеграции с GNOME Shell
+- Наследование от `SearchEngine` позволяет `SearchProvider` напрямую вызывать методы поиска без дополнительной обёртки.
+- `SearchEngine` можно тестировать независимо, вне среды GNOME Shell
 - Поисковый движок можно использовать вне контекста Search Provider
 - `SearchProvider` легко адаптировать для работы с другим поисковым движком
 
-~~~
-                                       ┌──────────────────────────────────────────────────┐
-                                       │                            ┌───────────────────┐ │
-                                       │ «SearchProvider»           │Engine internal API│ │
-    ┌───────────┐                      │                            │   «SearchEngine»  │ │
-    │GNOME Shell│                      │        │                   └──────────┬────────┘ │
-    └─────┬─────┘                      └────────┼──────────────────────────────┼──────── ─┘
-          │                                     │                              │
-          .                                     .                              .
-          .                                     .                              .
-          .                                     .                              .
-   ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-   │ Shell registers search provider                                                                    ░│
-   │ (addProvider() in the module implementing Extensions)                                               │
-   └─═════╤═════════════════════════════════════╤══════════════════════════════╤════════════════════════─┘
-          │                                     │                              │
-          ├────────────────────────────────────>│                              │
-          │                                     │                              │
-          │ { id, appInfo }                     │                              │
-          │<────────────────────────────────────┤                              │
-          .                                     .                              .
-          .                                     .                              .
-          .                                     .                              .
-   ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-   │ User types search query - Shell initiates search request                                           ░│
-   └─═════╤═════════════════════════════════════╤══════════════════════════════╤════════════════════════─┘
-          │                                     │                              │
-          │         getInitialResultSet(terms)  │                              │
-          ├───────────────────────────────────>┌┴┐                             │
-          │                                    │ │       searchManPages(terms) │
-          │                                    │ ├────────────────────────────>│
-          │                                    │ │                             │  run apropos ┌────────────┐
-          │                                    │ │                             ├─────────────>│ Subprocess │
-          │                                    │ │                             │              └─────┬──────┘
-          │                                    │ │                             │ output             │
-          │                                    │ │                             │<───────────────────X
-          │                                    │ │                             ├────┐
-          │                                    │ │                             │    │ parseOutput(output)
-          │                                    │ │                             │<───┘
-          │                                    │ │ identifiers                 │
-          │   «async»                          │ │<────────────────────────────┤
-          │ identifiers                        │ │                             │
-          │<─ ─ ─ ─ ─ ── ─ ── ─ ─ ─ ─ ─ ─ ─ ─ ─┴┬┘                             │
-          .                                     .                              .
-          .                                     .                              .
-          .                                     .                              .
-   ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-   │ User refines query - Shell requests refines results                                                ░│
-   └─═════╤═════════════════════════════════════╤══════════════════════════════╤════════════════════════─┘
-          │                                     │                              │
-          │     getSubsearchResultSet(results,  │                              │
-          │                             terms)  │                              │
-          ├─   ───────────────────────────────>┌┴┐                             │
-          │                                    │ │getInitialResultSet(terms)   │
-          │                                    │ ├────┐                        │
-          │                                    │ │    │                        │
-          │      «async»                       │ │<───┘                        │
-          │    identifiers                     │ │                             │
-          │<─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─    ─ ─ ─ ──┴┬┘                             │
-          .                                     .                              .
-          .                                     .                              .
-          .                                     .                              .
-   ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-   │ Shell may request result count limitation                                                          ░│
-   └─═════╤═════════════════════════════════════╤══════════════════════════════╤════════════════════════─┘
-          │                                     │                              │
-          │     filterResults(identifiers,      │                              │
-          │                    maxResults)      │                              │
-          ├───  ──────────────────────────────>┌┴┐                             │
-          │                                    │ │  identifiers.slice()        │
-          │                                    │ ├────┐                        │
-          │                                    │ │    │                        │
-          │                                    │ │<───┘                        │
-          │ identifiers                        │ │                             │
-          │<─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┴┬┘                             │
-          .                                     .                              .
-          .                                     .                              .
-          .                                     .                              .
-   ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-   │ Shell prepares result display                                                                      ░│
-   └─═════╤═════════════════════════════════════╤══════════════════════════════╤════════════════════════─┘
-          │                                     │                              │
-   ┌──────┴─────────────────────────────────────┴──────────────────────────────┴─────────────────────────┐
-   │ Shell fetches result metadata                                                                      ░│
-   └─═════╤═════════════════════════════════════╤══════════════════════════════╤════════════════════════─┘
-          │                                     │                              │
-          │        getResultMetas(identifiers)  │                              │
-          ├───────────────────────────────────>┌┴┐                             │
-          │                                    │ │                             │
-          │                      ┌─────────────┴─┴──────┬──────────────────────┼────────────────────────────────┐
-          │                      │ FOREACH identifiers  │                      │                                │
-          │                      ├─────────────┬─┬──────┘                      │                                │
-          │                      │             │ │                             │                                │
-          │                      │             │ │     getPageInfo(identifier) │                                │
-          │                      │             │ ├────────────────────────────>│                                │
-          │                      │             │ │                             │                                │
-          │                      │             │ │                             │   run whatis ┌────────────┐    │
-          │                      │             │ │                             ├─────────────>│ Subprocess │    │
-          │                      │             │ │                             │              └─────┬──────┘    │
-          │                      │             │ │                             │ output             │           │
-          │                      │             │ │                             │<───────────────────x           │
-          │                      │             │ │                             │                                │
-          │                      │             │ │                             ├────┐                           │
-          │                      │             │ │                             │    │ parseOutput(output)       │
-          │                      │             │ │                             │<───┘                           │
-          │                      │             │ │ [title, description]        │                                │
-          │                      │             │ │<────────────────────────────┤                                │
-          │                      │             │ │                             │                                │
-          │   «async»            └─────────────┼─┼─────────────────────────────┼────────────────────────────────┘
-          │ resultMetas                        │ │                             │
-          │<─ ─ ─ ─ ─ ─ ─ ─   ─ ─ ─ ─ ─ ─ ─ ─ ─┴┬┘                             │
-          │                                     │                              │
-          .                                     .                              .
-          .                                     .                              .
-          .                                     .                              .
-   ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-   │ Shell requests result widgets                                                                      ░│
-   └══════╤═════════════════════════════════════╤══════════════════════════════╤════════════════════════─┘
-          │                                     │                              │
-┌─────────┴───────────┬─────────────────────────┼─────────┐                    │
-│ FOREACH ResultMetas │                         │         │                    │
-├─────────┬───────────┘                         │         │                    │
-│         │     createResultObject(ResultMeta)  │         │                    │
-│         ├───────────────────────────────────>┌┴┐        │                    │
-│         │                                    │ │        │                    │
-│         │ null                               │ │        │                    │
-│         │<─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┴┬┘        │                    │
-└─────────┼─────────────────────────────────────┼─────────┘                    │
-          │                                     │                              │
-          │                                     │                              │
-          │  displays search results in UI      │                              │
-          ├────┐                                │                              │
-          │    │                                │                              │
-          │<───┘                                │                              │
-          │                                     │                              │
-          .                                     .                              .
-          .                                     .                              .
-          .                                     .                              .
-   ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-   │ User activate result item                                                                          ░│
-   └─═════╤═════════════════════════════════════╤══════════════════════════════╤════════════════════════─┘
-          │                                     │                              │
-          │          activateResult(identifier) │                              │
-          ├────────────────────────────────────>│                              │
-          │                                     │                      gnome-terminal -- man  ┌────────────┐
-          │                                     ├────────────────────────────────────────────>│ Subprocess │
-          │                                     │                              │              └────────────┘
-          │                                     │                              │
-          .                                     .                              .
-          .                                     .                              .
-          .                                     .                              .
-   ┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
-   │ User triggers 'More results' action                                                                ░│
-   └─═════╤═════════════════════════════════════╤══════════════════════════════╤════════════════════════─┘
-          │                                     │                              │
-          │                 launchSearch(terms) │                              │
-          ├────────────────────────────────────>│                              │
-          │                                     │                  gnome-terminal -- apropos  ┌────────────┐
-          │                                     ├────────────────────────────────────────────>│ Subprocess │
-          │                                     │                              │              └────────────┘
-          │                                     │                              │
-          .                                     .                              .
-          .                                     .                              .
-          .                                     .                              .
-~~~
 
-> **NOTE**: Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Например, в простых случаях, сам класс расширения может реализовать интерфейс `SearchProvider2Interface`:
+## Диаграмма взаимодействий
+
+Ниже представлена последовательность взаимодействий между GNOME Shell и поисковым провайдером.
+
+**Обозначения:**  
+- `terms` — поисковые термины, введенные пользователем
+- `identifiers` — массив уникальных идентификаторов результатов поиска
+- `identifier` — идентификатор конкретного результата
+- `resultMetas` — массив с объектами ResultMeta
+- `resultMeta` — объект ResultMeta для конкретного результата
+
+**Важные моменты:**  
+- Асинхронность: Все методы поиска асинхронные и возвращают Promise
+- Отмена операций: Используется Gio.Cancellable для прерывания долгих операций (не отображено на диаграмме)
+- Повторные вызовы: Shell может вызывать методы многократно при изменении запроса (не отображено на диаграмме)
+
+![Sequence Diagram](pics/Sequence_Diagram.svg)
+
+> **NOTE**:  
+> Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Для простых случаев класс расширения может напрямую реализовать `SearchProvider2Interface`:
 >
 > ~~~typescript
 > // Класс-расширение самостоятельно реализующий SearchProvider2Interface интерфейс
 > export default class SearchProviderExtension extends Extension implements SearchProvider2Interface {
 >
->     private declare searchProvider: SearchProvider;
+>     readonly id: string = this.uuid;
+>     readonly appInfo: Gio.AppInfo | null = null;
 >
 >     enable() {
 >         // Регистрирует себя как поставщика поиска
@@ -625,65 +481,67 @@ import type {
 >         Main.overview.searchController.removeProvider(this);
 >     }
 >
->     // Добавляем еще одну ответственность:
->     // реализуем интерфейс SearchProvider2Interface
->     id: string = this.uuid;
->     appInfo: Gio.AppInfo = ...;
 >     //...
 >     async getInitialResultSet(terms, cancellable) {
 >         //...
 >     }
->     async getResultMetaInterfaces(identifiers, cancellable) {
+>     async getResultMetas(identifiers, cancellable) {
 >         //...
 >     }
->     // и остальные поля интерфейса SearchProvider2Interface
+>     // и остальные поля и методы интерфейса SearchProvider2Interface
 >     //...
 > }
 > ~~~
 
 
-## Класс `SearchEngine`
+## Описание компонентов
+
+
+### Класс `SearchEngine`
 
 [Файл: SearchEngine.ts](src/SearchEngine.ts)
 
-**Назначение**: Инкапсулирует всю логику поиска по man-страницам. Поисковый движок.
+**Назначение:**  
+Содержит бизнес-логику поиска, работает с системными утилитами для получения информации о man-страницах. Поисковый движок.
 
-**Ответственности**:
-
-- Запуск системных команд `apropos` и `whatis`
+**Ответственности:**  
+- Запуск системных команд `apropos` и `whatis` для выполнения поиска
 - Парсинг вывода команд
-- Предоставление данных (заголовок и описание страницы) для создания ResultMetaInterface-объекта
+- Предоставление данных (заголовок и описание) страницы
 
 **Ключевые методы**:
 
 ~~~typescript
 class SearchEngine {
 
-    // Основной поиск по всей базе man-страниц.
-    // Формируем команду `apropos` с поиском по всем терминам переданным в `terms`.
-    // Парсит, и возвращаем результат как массив идентификаторов в формате
-    // `section|command`.
-    // Поддерживает отмену.
     protected async searchManPages(
         terms: string[],
         cancellable: Gio.Cancellable
-    ): Promise<string[]>
+    ): Promise<string[]> {
+        // Основной поиск по всей базе man-страниц.
+        // Формируем команду `apropos` с поиском по всем терминам переданным в `terms`.
+        // Парсит, и возвращаем результат как массив идентификаторов в формате
+        // `section|command`.
+        // Поддерживает отмену.
+    }
 
-    // Получение метаданных (заголовок и описание) о конкретной странице.
-    // Формируем команду `whatis` для конкретной страницы и парсит результат.
-    // Возвращает кортеж [title, description] для указанного идентификатора.
-    // Поддерживает отмену.
     protected async getPageInfo(
         identifier: string,
         cancellable: Gio.Cancellable
-    ): Promise<[title: string, description: string] | null>
+    ): Promise<[title: string, description: string] | null> {
+        // Получение метаданных (заголовок и описание) о конкретной странице.
+        // Формируем команду `whatis` для конкретной страницы и парсит результат.
+        // Возвращает кортеж [title, description] для указанного идентификатора.
+        // Поддерживает отмену.
+    }
 
-    // Parses output from 'whatis' or 'apropos' commands into structured data.
-    // Поддерживает отмену.
     private parseOutput(
         output: string,
         cancellable: Gio.Cancellable
-    ): string[]
+    ): string[] {
+        // Parses output from 'whatis' or 'apropos' commands into structured data.
+        // Поддерживает отмену.
+    }
 }
 ~~~
 
@@ -706,76 +564,83 @@ class SearchEngine {
   - [Debugging and Prototyping Block](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L364)
 
 
-## Класс SearchProvider
+### Класс SearchProvider
 
 [Файл: SearchProvider.ts](src/SearchProvider.ts)
 
-**Назначение**: Адаптирует `SearchEngine` для работы с GNOME Shell в качестве поставщика поиска.
+**Назначение:**  
+Адаптирует `SearchEngine` для работы с GNOME Shell. Реализует интерфейс SearchProvider2Interface, служит мостом между GNOME Shell и бизнес-логикой поиска.
 
-**Ответственности**:
+**Ответственности:**  
+- Обработка запросов от Shell
+- Преобразование данных между форматами Shell и SearchEngine
+- Управление асинхронными операциями и отменой
+- Запуск "приложения" при активации результата
 
-- Реализация интерфейса `SearchProvider2Interface`
-- Делегация в `SearchEngine` поисковых запросов
-
-**Наследование и ключевые моменты реализации**:
+**Наследование и ключевые моменты реализации**:  
 
 ~~~typescript
 // Расширяет `SearchEngine` и реализует `SearchProvider2Interface` интерфейс
 class SearchProvider extends SearchEngine implements SearchProvider2Interface {
 
-    // --- Свойства SearchProvider2Interface ---
+    // --- Свойства ---
 
-    readonly id: string;
+    readonly id: UUID;
 
     // Поиск производится "от лица" `org.gnome.Terminal`
-    readonly appInfo: Gio.AppInfo | null;
+    readonly appInfo: lookup_app("org.gnome.Terminal.desktop").appInfo;
 
     // Возвращает `true`
-    readonly canLaunchSearch: boolean;
+    readonly canLaunchSearch: true;
 
 
-    // --- Методы SearchProvider2Interface ---
+    // --- Методы ---
 
-    // Запускает поиск если первый поисковый термин имеет длину хотя бы 2 символа.
-    // Делегирует поиск в `SearchEngine::searchManPages`.
-    async getInitialResultSet(terms: string[], cancellable: Gio.Cancellable): Promise<string[]>
+    async getInitialResultSet(terms: string[], cancellable: Gio.Cancellable): Promise<string[]> {
+        // Запускает поиск если первый поисковый термин имеет длину хотя бы 2 символа.
+        // Делегирует поиск "движку".
+    }
 
-    // Запускает новый поиск с новым `terms`.
-    async getSubsearchResultSet(_previousResults: string[], terms: string[], cancellable: Gio.Cancellable): Promise<string[]>
+    async getSubsearchResultSet(_previousResults: string[], terms: string[], cancellable: Gio.Cancellable): Promise<string[]> {
+        // Запускает новый поиск с новым `terms`.
+    }
 
-    // Сокращает поиск до семи результатов.
-    filterResults(identifiers: string[], _maxResults: number): string[]
+    filterResults(identifiers: string[], _maxResults: number): string[] {
+        // Сокращает поиск до семи результатов.
+    }
 
-    // Формирует метаданные результата.
-    // Получает метаданные через `SearchEngine::getPageInfo`.
-    // Создает и заполняет объекты метаданных для результатов.
-    async getResultMetaInterfaces(identifiers: any[], cancellable: Gio.Cancellable): Promise<ResultMetaInterface[]>
+    async getResultMetas(identifiers: any[], cancellable: Gio.Cancellable): Promise<ResultMetaInterface[]> {
+        // Формирует метаданные результата.
+        // Получает метаданные через `SearchEngine::getPageInfo`.
+        // Создает и заполняет объекты метаданных для результатов.
+    }
 
-    // Данная реализация всегда возвращает `null`.
-    createResultObject(_ResultMetaInterface: ResultMetaInterface): Clutter.Actor | null
+    createResultObject(_ResultMetaInterface: ResultMetaInterface): Clutter.Actor | null {
+        // Данная реализация всегда возвращает `null`.
+    }
 
-    // Для активированного результата открывает соответствующую
-    // man-страницу в терминале.
-    activateResult(result: string, _terms: string[]): void
+    activateResult(result: string, _terms: string[]): void {
+        // Для активированного результата открывает соответствующую
+        // man-страницу в терминале.
+    }
 
-    // При активации открывает терминал с apropos и передает в него поисковые термины.
-    launchSearch(terms: string[]): void
+    launchSearch(terms: string[]): void {
+        // При активации открывает терминал с apropos и передает в него поисковые термины.
+    }
 
 }
 ~~~
 
-**Примечание**: Наследование от `SearchEngine` позволяет напрямую вызывать методы поиска без дополнительной обёртки.
 
-
-## Класс `ExampleExtension`
+### Класс `ExampleExtension`
 
 [Файл: extension.ts](src/extension.ts)
 
-**Назначение**: Точка входа расширения, управление жизненным циклом.
+**Назначение:**  
+Главный класс расширения, управляющий жизненным циклом поискового провайдера.
 
-Ответственности:
-
-- Создание экземпляра `SearchProvider`
+**Ответственности:**  
+- Создание и инициализация `SearchProvider`
 - Регистрация его как поставщика поиска в GNOME Shell
 - Корректная очистка ресурсов при отключении расширения
 
@@ -818,6 +683,14 @@ export default class ExampleExtension extends Extension {
 - Можно добавить кэширование на уровне `SearchEngine`
 - `SearchProvider` можно переиспользовать для других поисковых движков
 
+
+# Реализуя свой поставщик Best Practices
+
+- Всегда проверяйте `cancellable` в долгих операциях
+- Возвращайте пустой массив при ошибках, не выбрасывайте исключения
+- Освобождайте ресурсы
+- Логируйте ошибки
+- Тестируйте с разными локалями для интернационализации
 
 [GCancellable]: https://docs.gtk.org/gio/class.Cancellable.html
 [guide-search-provider]: https://gjs.guide/extensions/topics/search-provider.html

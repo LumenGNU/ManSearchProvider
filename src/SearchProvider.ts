@@ -106,11 +106,11 @@ export class SearchProvider extends SearchEngine implements SearchProvider2Inter
      * Если срабатывает cancellable, этот метод должен вызывать ошибку.
      * 
      * @async
-     * @param results исходный набор результатов
+     * @param _previousIdentifiers исходный набор результатов
      * @param terms поисковые термины
      * @param cancellable — отменяемое действие для операции
      * @returns подмножество исходного набора результатов */
-    async getSubsearchResultSet(_previousResults: string[], terms: string[], cancellable: Gio.Cancellable): Promise<string[]> {
+    async getSubsearchResultSet(_previousIdentifiers: string[], terms: string[], cancellable: Gio.Cancellable): Promise<string[]> {
 
         // console.debug(`\nSearchProvider: getSubsearchResultSet(results: ${JSON.stringify(_previousResults, null, 2)}, ${JSON.stringify(terms, null, 2)}), cancellable: ${cancellable.constructor.name}`);
 
