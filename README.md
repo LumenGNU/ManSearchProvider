@@ -24,7 +24,7 @@ A search provider for quick access to man pages directly from the GNOME Shell ov
 
 Simply start typing in the overview. The provider activates automatically for any query of 2 or more characters.
 
-![Man pages search results displayed in GNOME Shell overview search](pics/search_provider.png)
+![Man pages search results displayed in GNOME Shell overview search](pics/gnome_quick_searches.png)
 
 
 ## Implementation Features
