@@ -7,7 +7,7 @@
 
 Этот документ описывает реализацию поставщика поиска (Search Provider) для GNOME Shell на **примере** расширения, написанного на TypeScript.
 
-Документ объясняет, как реализовать интерфейсы `SearchProvider2Interface` и `ResultMetaInterface` на примере расширения предоставляющего поиска по документам `man` доступных в системе.
+Документ объясняет, как реализовать интерфейсы `SearchProvider2` и `ResultMeta` на примере расширения предоставляющего поиска по документам `man` доступных в системе.
 
 
 # Целевая аудитория
@@ -50,34 +50,34 @@
 
 ![gnome_quick_searches](gnome_quick_searches.png)
 
-В рамках расширения GNOME Shell поставщик поиска реализуется как отдельный класс, реализующий интерфейс `SearchProvider2Interface`.
+В рамках расширения GNOME Shell поставщик поиска реализуется как отдельный класс, реализующий интерфейс `SearchProvider2`.
 
 Для успешной реализации поставщика поиска необходимо, прежде всего, понять назначение двух ключевых интерфейсов:
 
-- [`SearchProvider2Interface`](#SearchProvider2Interface) - интерфейс поставщика поиска
-- [`ResultMetaInterface`](#ResultMetaInterface) - интерфейс объект метаданных результата
+- [`SearchProvider2`](#SearchProvider2) - интерфейс поставщика поиска
+- [`ResultMetaInterface`](#ResultMeta) - интерфейс объект метаданных результата
 
-Далее рассмотрим интерфейс `SearchProvider2Interface`, определяющий контракт между Shell и расширением.
+Далее рассмотрим интерфейс `SearchProvider2`, определяющий контракт между Shell и расширением.
 
 
-# Интерфейс SearchProvider2Interface
+# Интерфейс SearchProvider2
 
 
 ## Обзор
 
-`SearchProvider2Interface` — интерфейс для реализации поставщика поиска в расширении GNOME Shell.
+`SearchProvider2` — интерфейс для реализации поставщика поиска в расширении GNOME Shell.
 
-Ваш класс должен реализовать этот интерфейс, чтобы Shell мог зарегистрировать и использовать его как поставщика поиска. Он определяет набор свойств и методов, необходимых для корректного взаимодействия с GNOME Shell при обработке поисковых запросов.
+Ваш класс, реализующий поиск, должен реализовать этот интерфейс, чтобы Shell мог зарегистрировать и использовать его как поставщика поиска. Он определяет набор свойств и методов, необходимых для корректного взаимодействия с GNOME Shell при обработке поисковых запросов.
 
 **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts)
 
 
 ## Импорт
-
+TODO
 ~~~typescript
 import type {
-    SearchProvider2Interface,
-    ResultMetaInterface
+    SearchProvider2,
+    ResultMeta
 } from './SearchProvider2Interface.js';
 ~~~
 
@@ -85,17 +85,17 @@ import type {
 > ## Свойства
 >
 >
->> ### `id`
->>
->> ~~~typescript
->> readonly id: string;
->> ~~~
->>
->> **Описание**: Уникальный строковый идентификатор поставщика поиска в системе.
->>
->> Должен быть уникальным среди всех поставщиков, не только среди расширений. Расширения обычно используют свой `UUID` в качестве этого идентификатора.
->>
->> **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L35)
+> - ### `id`
+>
+>   ~~~typescript
+>   readonly id: string;
+>   ~~~
+>  
+>   **Описание**: Уникальный строковый идентификатор поставщика поиска в системе.
+>  
+>   Должен быть уникальным среди всех поставщиков, не только среди расширений. Расширения обычно используют свой `UUID` в качестве этого идентификатора.
+>  
+>   **Реализация в примере**: [SearchProvider.ts](src/SearchProvider.ts#L35)
 >
 >
 >> ### `appInfo`
@@ -420,9 +420,13 @@ import type {
 
 Пример расширения реализован через три основных класса:
 
+`SearchEngine` - Основная бизнес логика поиска, взаимодействие с системой
+`SearchProvider` - Взаимодействие с GNOME Shell
+`ExampleExtension` - Основной класс расширения
+
 ![Classes Diagram](pics/Classes_Diagram.svg)
 
-Эта архитектура обеспечивает:
+Такая архитектура обеспечивает:
 
 - Отделение поисковой логики от интеграции с GNOME Shell
 - Наследование от `SearchEngine` позволяет `SearchProvider` напрямую вызывать методы поиска без дополнительной обёртки.
@@ -433,7 +437,7 @@ import type {
 
 ## Диаграмма взаимодействий
 
-Ниже представлена последовательность взаимодействий между GNOME Shell и поисковым провайдером.
+Ниже представлена последовательность взаимодействий между GNOME Shell и реализацией поискового провайдера.
 
 **Обозначения:**  
 - `terms` — поисковые термины, введенные пользователем
@@ -450,11 +454,11 @@ import type {
 ![Sequence Diagram](pics/Sequence_Diagram.svg)
 
 > **NOTE**:  
-> Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Для простых случаев класс расширения может напрямую реализовать `SearchProvider2Interface`:
+> Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Для простых случаев класс расширения может напрямую реализовать `SearchProvider2`:
 >
 > ~~~typescript
-> // Класс-расширение самостоятельно реализующий SearchProvider2Interface интерфейс
-> export default class SearchProviderExtension extends Extension implements SearchProvider2Interface {
+> // Класс-расширение самостоятельно реализующий `SearchProvider2` интерфейс
+> export default class SearchProviderExtension extends Extension implements SearchProvider2 {
 >
 >     readonly id: string = this.uuid;
 >     readonly appInfo: Gio.AppInfo;
@@ -476,7 +480,7 @@ import type {
 >     async getResultMetas(identifiers, cancellable) {
 >         //...
 >     }
->     // и остальные поля и методы интерфейса SearchProvider2Interface
+>     // и остальные поля и методы интерфейса SearchProvider2
 >     //...
 > }
 > ~~~
@@ -557,7 +561,7 @@ class SearchEngine {
 [Файл: SearchProvider.ts](src/SearchProvider.ts)
 
 **Назначение:**  
-Адаптирует `SearchEngine` для работы с GNOME Shell. Реализует интерфейс SearchProvider2Interface, служит мостом между GNOME Shell и бизнес-логикой поиска.
+Адаптирует `SearchEngine` для работы с GNOME Shell. Реализует интерфейс SearchProvider2, служит мостом между GNOME Shell и бизнес-логикой поиска.
 
 **Ответственности:**  
 - Обработка запросов от Shell
@@ -568,8 +572,8 @@ class SearchEngine {
 **Наследование и ключевые моменты реализации**:  
 
 ~~~typescript
-// Расширяет `SearchEngine` и реализует `SearchProvider2Interface` интерфейс
-class SearchProvider extends SearchEngine implements SearchProvider2Interface {
+// Расширяет `SearchEngine` и реализует `SearchProvider2` интерфейс
+class SearchProvider extends SearchEngine implements SearchProvider2 {
 
     // --- Свойства ---
 
