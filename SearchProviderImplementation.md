@@ -155,7 +155,7 @@ import type {
 
 
 - ### `getInitialResultSet()`
-  ---
+
   ~~~typescript
   getInitialResultSet(
       terms: string[],
@@ -163,14 +163,14 @@ import type {
   ): Promise<string[]>
   ~~~
  
-  **Описание**:  
+  **Описание:**  
   Выполняет первоначальный поиск и возвращает *строковые идентификаторы* найденных результатов.
  
-  **Параметры**:
+  **Параметры:**
   - `terms` — массив поисковых терминов (слова из запроса пользователя)
   - `cancellable` — объект для отмены операции
  
-  **Возвращает**:  
+  **Возвращает:**  
   Promise с массивом строковых идентификаторов результатов.
  
   Вызывается при каждом новом поисковом запросе. Метод должен провести первоначальный поиск и вернуть массив уникальных идентификаторов. Каждый идентификатор должен однозначно сопоставляться со своим результатом поиска.
@@ -195,11 +195,11 @@ import type {
   [(Ссылка на исходный код gnome-shell. Актуально для версий 46-48)](https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/search.js?ref_type=heads#L702).  
   Поэтому рекомендую всегда разрешать Promise — а в случае прерывания или ошибки возвращать пустой массив.
  
-  **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L74)
+  **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L74)<p>&nbsp;
 
 
 - ### `getSubsearchResultSet()`
- 
+
   ~~~typescript
   getSubsearchResultSet(
       previousIdentifiers: string[],
@@ -208,45 +208,45 @@ import type {
   ): Promise<string[]>
   ~~~
  
-  **Описание**:  
+  **Описание:**  
   Уточняет результаты поиска при добавлении новых поисковых терминов.
  
-  **Параметры**:
+  **Параметры:**
   - `previousIdentifiers` — идентификаторы из предыдущего поиска
   - `terms` — новые поисковые термины (включая предыдущие)
   - `cancellable` — объект для отмены операции
  
-  **Возвращает**:  
+  **Возвращает:**  
   Promise с массивом идентификаторов уточнённого или нового поиска.
  
   Этот метод вызывается для уточнения текущих результатов при добавлении новых поисковых терминов. Метод может вернуть либо уточненное подмножество исходных результатов, либо выполнить новый поиск с новыми терминами.
  
   Метод можно использовать для оптимизации поиска, избегая полного пересоздания результатов, или просто делегировать вызов в `getInitialResultSet()`.
  
-  **Важно**:  
+  **Важно:**  
   Метод **должен** прервать поиск по сигналу от объекта [`cancellable`][GCancellable].
 
   **Замечание:**  
   Те же правила что и для getInitialResultSet TODO
 
-  **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L202)
+  **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L202)<p>&nbsp;
 
 
 - ### `filterResults()`
- 
+
   ~~~typescript
   filterResults(identifiers: string[], maxResults: number): string[]
   ~~~
  
-  **Описание**:  
+  **Описание:**  
   Ограничивает количество отображаемых результатов текущего поиска.
  
-  **Параметры**:
+  **Параметры:**
  
   - `identifiers` — полный список идентификаторов текущих результатов
   - `maxResults` — желаемое максимальное количество результатов для отображения
  
-  **Возвращает**:  
+  **Возвращает:**  
   Усечённый массив идентификаторов результатов.
  
   Метод может:
@@ -254,14 +254,14 @@ import type {
   - использовать собственные критерии для отбора результатов
   - игнорировать запрос и возвращать все результаты
  
-  **Важно**:  
+  **Важно:**  
   Метод должен вернуть **подмножество исходного `identifiers`**. Добавление новых или изменение существующих идентификаторов недопустимо.
  
-  **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L225)
+  **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L225)<p>&nbsp;
 
 
 - ### `getResultMetas()`
- 
+
   ~~~typescript
   getResultMetas(
       identifiers: string[],
@@ -269,61 +269,61 @@ import type {
   ): Promise<ResultMeta[]>
   ~~~
  
-  **Описание**:  
+  **Описание:**  
   Возвращает метаданные результатов для отображения в интерфейсе.
  
-  **Параметры**:
+  **Параметры:**
   - `identifiers` — массив идентификаторов результатов
   - `cancellable` — объект для отмены операции
  
-  **Возвращает**:  
+  **Возвращает:**  
   Promise с массивом метаданных для каждого результата из `identifiers`.
  
   Метод должен сопоставить каждому идентификатору, перечисленному в массиве `identifiers`, соответствующий ResultMeta объект, включающий как минимум поля `id`, `name` и `createIcon`.
  
   См. [Интерфейс ResultMeta](#ResultMeta)
  
-  **Замечание**:  
+  **Замечание:**  
   Shell не устанавливает жёсткий таймаут, но ожидает, что метод остановит обработку, освободит связанные ресурсы и вернёт **пустой** массив при получении сигнала отмены от объекта `cancellable`.
  
-  **Замечание**:  
+  **Замечание:**  
   [Хотя документация требует][guide-search-provider] отклонять промис с ошибкой при прерывании, однако Shell, по-видимому, не обрабатывает такую ситуацию корректно.  
   [(Ссылка на исходный код gnome-shell. Актуально для версий 46-48)]( https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/js/ui/search.js?ref_type=heads#L230)  
   Поэтому рекомендую всегда разрешать промис — в случае прерывания или ошибки возвращать пустой массив.
  
-  **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L127)
+  **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L127)<p>&nbsp;
 
 
 - ### `createResultObject()`
- 
+
   ~~~typescript
   createResultObject(meta: ResultMeta): Clutter.Actor | null
   ~~~
  
-  **Описание**:  
+  **Описание:**  
   Создаёт пользовательский виджет для отображения результата.
  
-  **Параметры**:
+  **Параметры:**
   - `meta` — метаданные результата
  
-  **Может возвращать**:  
+  **Может возвращать:**  
   - `Clutter.Actor` — пользовательский виджет (как правило, `St.Icon`)  
   или  
   - `null` — использовать стандартное отображение Shell
  
-  **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L109)
+  **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L109)<p>&nbsp;
 
 
 - ### `activateResult()`
- 
+
   ~~~typescript
   activateResult(identifier: string, terms: string[]): void
   ~~~
  
-  **Описание**:  
+  **Описание:**  
   Обрабатывает активацию результата поиска пользователем.
  
-  **Параметры**:  
+  **Параметры:**  
   - `identifier` — идентификатор активированного результата
   - `terms` — поисковые термины, приведшие к этому результату
  
@@ -335,15 +335,15 @@ import type {
 
 
 - ### `launchSearch()`
- 
+
   ~~~typescript
   launchSearch(terms: string[]): void
   ~~~
  
-  **Описание**:  
+  **Описание:**  
   Открывает полный поиск с заданными терминами. Вызывается, как правило, при активации действия "Показать больше результатов".
  
-  **Параметры**:  
+  **Параметры:**  
   - `terms` — текущие поисковые термины
  
   Метод может быть пустым (ничего не делать) или запустить соответствующее приложение/поисковый ресурс, передав в него поисковые термины.
@@ -358,7 +358,7 @@ import type {
 
 Интерфейс, определяющий метаданные результата поиска, которые GNOME Shell использует для отображения результата пользователю.
 
-**Использование в примере**: [SearchProvider.ts](src/SearchProvider.ts#L154)
+**Использование в примере:** [SearchProvider.ts](src/SearchProvider.ts#L154)
 
 
 > ## Свойства
@@ -417,13 +417,13 @@ import type {
 >>
 >> Функция, возвращающая значок для результата с указанием размера.
 >>
->> **Параметры**:
+>> **Параметры:**
 >>
 >> - `size` — размер иконки в пикселях
 >>
->> **Возвращает**: `Clutter.Actor` с иконкой.
+>> **Возвращает:** `Clutter.Actor` с иконкой.
 >>
->> **Замечание**: При вычислении размера значка необходимо учитывать текущий коэффициент масштабирования в системе (`St.ThemeContext.get_for_stage(global.stage)`).
+>> **Замечание:** При вычислении размера значка необходимо учитывать текущий коэффициент масштабирования в системе (`St.ThemeContext.get_for_stage(global.stage)`).
 
 **Реализация в примере:** [SearchProvider.ts](src/SearchProvider.ts#L159)
 
@@ -434,9 +434,9 @@ import type {
 
 Пример расширения реализован через три основных класса:
 
-`SearchEngine` - Основная бизнес логика поиска, взаимодействие с системой
-`SearchProvider` - Взаимодействие с GNOME Shell
-`ExampleExtension` - Основной класс расширения
+- `SearchEngine` - Основная бизнес логика поиска, взаимодействие с системой
+- `SearchProvider` - Взаимодействие с GNOME Shell
+- `ExampleExtension` - Основной класс расширения
 
 ![Classes Diagram](pics/Classes_Diagram.svg)
 
@@ -454,11 +454,11 @@ import type {
 Ниже представлена последовательность взаимодействий между GNOME Shell и реализацией поискового провайдера.
 
 **Обозначения:**  
-- `terms` — поисковые термины, введенные пользователем
-- `identifiers` — массив уникальных идентификаторов результатов поиска
-- `identifier` — идентификатор конкретного результата
-- `resultMetas` — массив с объектами ResultMeta
-- `resultMeta` — объект ResultMeta для конкретного результата
+`terms` — поисковые термины, введенные пользователем  
+`identifiers` — массив уникальных идентификаторов результатов поиска  
+`identifier` — идентификатор конкретного результата  
+`resultMetas` — массив с объектами ResultMeta  
+`resultMeta` — объект ResultMeta для конкретного результата  
 
 **Важные моменты:**  
 - Асинхронность: Все методы поиска асинхронные и возвращают Promise
@@ -467,45 +467,13 @@ import type {
 
 ![Sequence Diagram](pics/Sequence_Diagram.svg)
 
-> **NOTE**:  
-> Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Для простых случаев класс расширения может напрямую реализовать `SearchProvider2`:
->
-> ~~~typescript
-> // Класс-расширение самостоятельно реализующий `SearchProvider2` интерфейс
-> export default class SearchProviderExtension extends Extension implements SearchProvider2 {
->
->     readonly id: string = this.uuid;
->     readonly appInfo: Gio.AppInfo;
->
->     enable() {
->         // Регистрирует себя как поставщика поиска
->         Main.overview.searchController.addProvider(this);
->     }
->
->     disable() {
->         // Отмена регистрации
->         Main.overview.searchController.removeProvider(this);
->     }
->
->     //...
->     async getInitialResultSet(terms, cancellable) {
->         //...
->     }
->     async getResultMetas(identifiers, cancellable) {
->         //...
->     }
->     // и остальные поля и методы интерфейса SearchProvider2
->     //...
-> }
-> ~~~
-
 
 ## Описание компонентов
 
 
 ### Класс `SearchEngine`
 
-[Файл: SearchEngine.ts](src/SearchEngine.ts)
+[Файл SearchEngine.ts](src/SearchEngine.ts)
 
 **Назначение:**  
 Содержит бизнес-логику поиска, работает с системными утилитами для получения информации о man-страницах. Поисковый движок.
@@ -515,7 +483,7 @@ import type {
 - Парсинг вывода команд
 - Предоставление данных (заголовок и описание) страницы
 
-**Ключевые методы**:
+**Ключевые методы:**
 
 ~~~typescript
 class SearchEngine {
@@ -551,39 +519,41 @@ class SearchEngine {
 }
 ~~~
 
-> **Заметка разработчику**:
+> **Заметка разработчику:**
 >
-> **Формат идентификаторов**: В данной реализации, как строковые идентификаторы, позволяющие однозначно идентифицировать man-страницу используется формат `section|command`. Например: `1|printf`, `3|printf`.
+> **Формат идентификаторов:**  
+> В данной реализации, как строковые идентификаторы, позволяющие однозначно идентифицировать man-страницу используется формат `section|command`. Например: `1|printf`, `3|printf`.
 >
-> **Отладка и прототипирование**: Класс не зависит от GNOME Shell API и работает напрямую с системой. Поэтому его можно отладить и протестировать самостоятельно, вне среды GNOME Shell. Для демонстрации этого смотри "Debugging and Prototyping Block".
+> **Отладка и прототипирование:**  
+> Класс не зависит от GNOME Shell API и работает напрямую с системой. Поэтому его можно отладить и протестировать самостоятельно, вне среды GNOME Shell. Для демонстрации этого смотри "Debugging and Prototyping Block".
+>
+> **Локаль и nested shell:**  
+> TODO
 
-> **Заметка разработчику**: Локаль и nested shell TODO
-
-**Навигатор по коду**
-
+**Навигатор по коду:**
 - [SearchEngine.ts](src/SearchEngine.ts)
-  - [class `SearchEngine`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L77)
-    - [method `searchManPages`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L103C21-L103C35)
-    - [method `getPageInfo`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L172C21-L172C32)
-    - [method `runSubprocess`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L231C19-L231C32)
-    - [method `parseOutput`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L313C13-L313C24)
-  - [Debugging and Prototyping Block](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L364)
+  - [class `SearchEngine`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L77) - Search engine for system manual pages
+    - [method `searchManPages`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L103C21-L103C35) - Searches for manual pages matching the given terms
+    - [method `getPageInfo`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L172C21-L172C32) - Retrieves a detailed description of a manual page
+    - [method `runSubprocess`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L231C19-L231C32) - Runs a command and returns parsed output
+    - [method `parseOutput`](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L313C13-L313C24) - Parses output from 'whatis' or 'apropos' commands
+  - [Debugging and Prototyping Block](https://github.com/LumenGNU/ManSearchProvider/blob/ad77354404ca86b74e3a871b346d32630ded21ca/src/SearchEngine.ts#L364) - Sandbox for debugging, prototyping, and manually  verifying the core logic
 
 
-### Класс SearchProvider
+### Класс `SearchProvider`
 
-[Файл: SearchProvider.ts](src/SearchProvider.ts)
+[Файл SearchProvider.ts](src/SearchProvider.ts)
 
 **Назначение:**  
-Адаптирует `SearchEngine` для работы с GNOME Shell. Реализует интерфейс SearchProvider2, служит мостом между GNOME Shell и бизнес-логикой поиска.
+Адаптирует `SearchEngine` для работы с GNOME Shell. Реализует интерфейс `SearchProvider2`, служит мостом между GNOME Shell и бизнес-логикой поиска.
 
 **Ответственности:**  
 - Обработка запросов от Shell
-- Преобразование данных между форматами Shell и SearchEngine
-- Управление асинхронными операциями и отменой
+- Преобразование данных между форматами Shell и `SearchEngine`
 - Запуск "приложения" при активации результата
+- Запуск "приложения" при активации действия "Показать больше результатов"
 
-**Наследование и ключевые моменты реализации**:  
+**Наследование и ключевые моменты реализации:**  
 
 ~~~typescript
 // Расширяет `SearchEngine` и реализует `SearchProvider2` интерфейс
@@ -637,10 +607,16 @@ class SearchProvider extends SearchEngine implements SearchProvider2 {
 }
 ~~~
 
+> **Заметка разработчику:**
+> TODO
+
+**Навигатор по коду:**  
+TODO
+
 
 ### Класс `ExampleExtension`
 
-[Файл: extension.ts](src/extension.ts)
+[Файл extension.ts](src/extension.ts)
 
 **Назначение:**  
 Главный класс расширения, управляющий жизненным циклом поискового провайдера.
@@ -688,6 +664,39 @@ export default class ExampleExtension extends Extension {
 - Легко заменить "движок" на другой источник данных
 - Можно добавить кэширование на уровне `SearchEngine`
 - `SearchProvider` можно переиспользовать для других поисковых движков
+
+
+> **Замечание:**  
+> Ваша реализация не обязана следовать этой архитектуре. Выбирайте подход целесообразно вашей задаче и сложности. Для простых случаев класс расширения может напрямую реализовать `SearchProvider2`:
+>
+> ~~~typescript
+> // Класс-расширение самостоятельно реализующий `SearchProvider2` интерфейс
+> export default class SearchProviderExtension extends Extension implements SearchProvider2 {
+>
+>     readonly id: string = this.uuid;
+>     readonly appInfo: Gio.AppInfo;
+>
+>     enable() {
+>         // Регистрирует себя как поставщика поиска
+>         Main.overview.searchController.addProvider(this);
+>     }
+>
+>     disable() {
+>         // Отмена регистрации
+>         Main.overview.searchController.removeProvider(this);
+>     }
+>
+>     //...
+>     async getInitialResultSet(terms, cancellable) {
+>         //...
+>     }
+>     async getResultMetas(identifiers, cancellable) {
+>         //...
+>     }
+>     // и остальные поля и методы интерфейса SearchProvider2
+>     //...
+> }
+> ~~~
 
 
 # Реализуя свой поставщик Best Practices
