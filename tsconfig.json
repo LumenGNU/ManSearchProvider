@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist",
+    "sourceMap": false,
+    "strict": true,
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "removeComments": true
+  },
+  "include": [
+    "ambient.d.ts",
+    "src/**/*.ts"
+  ],
+  "files": [
+    "src/extension.ts",
+  ]
+}

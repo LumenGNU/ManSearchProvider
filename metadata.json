@@ -1,0 +1,13 @@
+{
+  "uuid": "man-search-provider@example.github.com",
+  "name": "Man Search Provider",
+  "description": "Search man pages from GNOME Shell overview",
+  "version": 1,
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48"
+  ],
+  "url": "example.com"
+}

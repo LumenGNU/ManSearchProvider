@@ -1,0 +1,40 @@
+{
+  "name": "man-search-provider",
+  "version": "1.0.0",
+  "description": "Search man pages from GNOME Shell",
+  "type": "module",
+  "private": true,
+  "config": {
+    "ID": "man-search-provider@example.github.com",
+    "DIST_DIR": "./dist",
+    "EXTENSION_DIR": "~/.local/share/gnome-shell/extensions",
+    "TERMINAL": "gnome-terminal",
+    "TERMINAL_PARAM": "--",
+    "LANG": "C",
+    "WIN_SIZE": "1280x720"
+  },
+  "scripts": {
+    "build": "npm run project:build-dist",
+    "setup": "npm run project:install-extension",
+    "clear": "npm run project:clear-dist; npm run project:clear-extension",
+    "debug": "npm run nested-shell:restart",
+    "dev": "npm run build && npm run setup && npm run debug",
+
+    "project:clear-dist": "[ -e $npm_package_config_DIST_DIR ] && rm -rf $npm_package_config_DIST_DIR",
+    "project:clear-extension": "[ -e `eval echo \"$npm_package_config_EXTENSION_DIR/$npm_package_config_ID\"` ] && rm -rf `eval echo \"$npm_package_config_EXTENSION_DIR/$npm_package_config_ID\"`",
+    "project:build-dist": "npm run project:clear-dist; echo 'Compile...'; tsc",
+    "project:mkdir-extension": "mkdir -p `eval echo \"$npm_package_config_EXTENSION_DIR/$npm_package_config_ID\"`",
+    "project:install-extension": "[ -e $npm_package_config_DIST_DIR ] && { npm run project:clear-extension; npm run project:mkdir-extension && echo 'Install...'; cp -r ./dist/* metadata.json `eval echo \"$npm_package_config_EXTENSION_DIR/$npm_package_config_ID/\"` && echo 'ok'; } || echo 'ERROR: Nothing to install. Run \"npm run build\" first'",
+
+    "nested-shell:start": "$npm_package_config_TERMINAL --title='gnome-shell debug output' $npm_package_config_TERMINAL_PARAM bash -c 'env GNOME_SHELL_SLOWDOWN_FACTOR=2 MUTTER_DEBUG_DUMMY_MODE_SPECS=$npm_package_config_WIN_SIZE LC_ALL=$npm_package_config_LANG G_MESSAGES_DEBUG=GNOME\\ Shell dbus-run-session -- gnome-shell --nested --wayland' &>/dev/null; echo '...Nested Shell started'",
+    "nested-shell:stop": "pkill -f 'gnome-shell --nested --wayland'",
+    "nested-shell:restart": "npm run nested-shell:stop; sleep 1; npm run nested-shell:start"
+
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "@girs/gnome-shell": "^49.0.3",
+    "@girs/gjs": "^4.0.0-beta.38",
+    "@girs/st-17": "^17.0.0-4.0.0-beta.38"
+  }
+}
