@@ -85,7 +85,7 @@ Implementing this interface allows the class to be used by GNOME Shell as a Sear
 **Implementation Example:** [SearchProvider.ts](src/SearchProvider.ts)
 
 
-- ### Import
+- ### Import TODO
 
   ~~~typescript
   import {
@@ -386,7 +386,7 @@ An interface that defines search result metadata, which GNOME Shell uses to disp
 
 **Usage in the example:** [SearchProvider.ts](src/SearchProvider.ts#L214)
 
-- ### Import
+- ### Import TODO
 
   ~~~typescript
   import {

@@ -21,10 +21,7 @@ import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import Shell from 'gi://Shell';
 
-import {
-    SearchProvider2,
-    ResultMeta
-} from '@girs/gnome-shell/extensions/global';
+import { SearchProvider2, ResultMeta } from './types/SearchProvider2Interface.js';
 
 import {
     SearchEngine
@@ -37,7 +34,6 @@ import {
 export class SearchProvider extends SearchEngine implements SearchProvider2 {
 
     private extensionId;
-
 
     /** Creates a new SearchProvider instance.
      * @param extensionId - The UUID of the extension */
