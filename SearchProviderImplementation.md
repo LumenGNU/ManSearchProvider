@@ -90,7 +90,7 @@ Implementing this interface allows the class to be used by GNOME Shell as a Sear
   ~~~typescript
   import {
       SearchProvider2
-  } from '@girs/gnome-shell/extensions/global';
+  } from './types/SearchProvider2Interface.js';
   ~~~
  
   **Implementation Example:** [SearchProvider.ts](src/SearchProvider.ts#L27)
@@ -391,7 +391,7 @@ An interface that defines search result metadata, which GNOME Shell uses to disp
   ~~~typescript
   import {
       ResultMeta
-  } from '@girs/gnome-shell/extensions/global';
+  } from './types/SearchProvider2Interface.js';
   ~~~
   - - - - -
 
